@@ -33,65 +33,87 @@
 
 <script>
 async function zaladujMecze() {
-    const MY_TOKEN = 'f74f5a062c754c81866359ee05090ff3'; // Twój klucz
+    const MY_TOKEN = 'f74f5a062c754c81866359ee05090ff3';
     const mainContainer = document.getElementById('football-news');
     const url = 'https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/matches';
 
-    // Kody lig TOP 5 dostępne w Twoim planie
-    const topLeagues = ['PL', 'PD', 'BL1', 'SA', 'FL1'];
+    const topLeagues = ['PL', 'PD', 'BL1', 'SA', 'FL1', 'CL']; // Premier League, La Liga, Bundesliga, Serie A, Ligue 1, Champions League
 
     try {
         const response = await fetch(url, { headers: { 'X-Auth-Token': MY_TOKEN } });
         const data = await response.json();
 
         if (!data.matches || data.matches.length === 0) {
-            mainContainer.innerHTML = '<p>Brak meczów na dzisiaj.</p>';
+            mainContainer.innerHTML = '<p style="text-align:center;">Brak meczów na dzisiaj.</p>';
             return;
         }
 
-        mainContainer.innerHTML = '<h3>Najważniejsze dzisiaj</h3><div id="top-matches"></div>';
-        mainContainer.innerHTML += `
-            <details style="margin-top: 20px;">
-                <summary style="cursor: pointer; color: #2563eb; font-weight: bold;">Pokaż pozostałe mecze (${data.matches.length})</summary>
-                <div id="other-matches" style="margin-top: 10px;"></div>
-            </details>
-        `;
+        mainContainer.innerHTML = ''; // Czyścimy loader
 
-        const topDiv = document.getElementById('top-matches');
-        const otherDiv = document.getElementById('other-matches');
+        // Słownik do grupowania meczów po nazwie ligi
+        const grupyLigi = {};
 
         data.matches.forEach(mecz => {
-            const html = `
-                <div style="border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
-                    <div style="flex: 1; text-align: right;">
-                        <img src="${mecz.homeTeam.crest}" width="20" style="vertical-align: middle; margin-right: 5px;">
-                        ${mecz.homeTeam.shortName}
-                    </div>
-                    <div style="padding: 0 15px; font-weight: bold;">
-                        ${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}
-                    </div>
-                    <div style="flex: 1; text-align: left;">
-                        ${mecz.awayTeam.shortName}
-                        <img src="${mecz.awayTeam.crest}" width="20" style="vertical-align: middle; margin-left: 5px;">
-                    </div>
+            const ligaName = mecz.competition.name;
+            if (!grupyLigi[ligaName]) {
+                grupyLigi[ligaName] = [];
+            }
+            grupyLigi[ligaName].push(mecz);
+        });
+
+        // Iterujemy po stworzonych grupach
+        for (const liga in grupyLigi) {
+            const isTop = topLeagues.includes(grupyLigi[liga][0].competition.code);
+            
+            // Tworzymy nagłówek ligi
+            const section = document.createElement('div');
+            section.innerHTML = `
+                <div style="background: #e2e8f0; padding: 5px 15px; margin: 15px 0 10px 0; border-radius: 5px; font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+                    <img src="${grupyLigi[liga][0].competition.emblem}" width="20" onerror="this.style.display='none'">
+                    ${liga}
                 </div>
             `;
 
-            // Sprawdzamy czy mecz należy do TOP 5
-            if (topLeagues.includes(mecz.competition.code)) {
-                topDiv.innerHTML += html;
-            } else {
-                otherDiv.innerHTML += html;
-            }
-        });
+            const matchesList = document.createElement('div');
 
-        // Jeśli nie ma meczów TOP 5, dajemy info
-        if (topDiv.innerHTML === "") {
-            topDiv.innerHTML = "<p style='color: gray;'>Brak dzisiejszych spotkań w Top 5 lig.</p>";
+            grupyLigi[liga].forEach(mecz => {
+                matchesList.innerHTML += `
+                    <div style="border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                        <div style="flex: 1; text-align: right; font-size: 0.9rem;">
+                            <strong>${mecz.homeTeam.shortName || mecz.homeTeam.name}</strong>
+                            <img src="${mecz.homeTeam.crest}" width="25" style="vertical-align: middle; margin-left: 8px;">
+                        </div>
+                        <div style="padding: 0 15px; text-align: center; min-width: 70px;">
+                            <span style="background: #1e293b; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">
+                                ${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}
+                            </span>
+                        </div>
+                        <div style="flex: 1; text-align: left; font-size: 0.9rem;">
+                            <img src="${mecz.awayTeam.crest}" width="25" style="vertical-align: middle; margin-right: 8px;">
+                            <strong>${mecz.awayTeam.shortName || mecz.awayTeam.name}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Jeśli to liga TOP 5, wrzucamy na początek, jeśli nie - chowamy do "Pozostałe"
+            if (isTop) {
+                mainContainer.appendChild(section);
+                mainContainer.appendChild(matchesList);
+            } else {
+                const details = document.createElement('details');
+                details.style.marginTop = "10px";
+                details.innerHTML = `
+                    <summary style="cursor: pointer; color: #64748b; font-size: 0.8rem; margin-bottom: 5px;">Pokaż mecze: ${liga}</summary>
+                `;
+                details.appendChild(matchesList);
+                mainContainer.appendChild(details);
+            }
         }
 
     } catch (error) {
-        mainContainer.innerHTML = '<p>Błąd. Upewnij się, że proxy jest aktywne.</p>';
+        mainContainer.innerHTML = '<p>Błąd pobierania danych. Sprawdź połączenie.</p>';
+        console.error(error);
     }
 }
 zaladujMecze();

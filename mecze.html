@@ -6,91 +6,119 @@
     <title>Football Connect Live</title>
     <style>
         :root {
-            --bg-dark: #050505;
-            --card-bg: rgba(20, 20, 20, 0.95);
+            --bg-dark: #0a0a0a;
+            --card-bg: #141414;
             --sofa-blue: #0047ff;
             --text-gray: #aaa;
             --accent-red: #ff2d55;
             --rating-green: #00d24d;
-            --border: 1px solid rgba(255,255,255,0.1);
+            --border: 1px solid rgba(255,255,255,0.05);
         }
 
         body { 
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('boisko.jpg') no-repeat center center fixed;
-            background-size: cover;
+            background: var(--bg-dark);
             color: white;
             min-height: 100vh;
         }
 
-        nav { background: var(--sofa-blue); padding: 0 20px; display: flex; height: 55px; align-items: center; gap: 30px; position: sticky; top: 0; z-index: 1000; }
-        nav a { color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        /* Tło boiska w tle strony - tak jak na Twoich screenach */
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('boisko.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+        }
+
+        nav { background: var(--sofa-blue); padding: 0 20px; display: flex; height: 50px; align-items: center; gap: 30px; }
+        nav a { color: white; text-decoration: none; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
 
         .main-grid {
             display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            gap: 15px;
-            max-width: 1500px;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 20px;
+            max-width: 1600px;
             margin: 20px auto;
-            padding: 0 15px;
-            align-items: start;
+            padding: 0 20px;
         }
 
-        .sidebar-panel { background: var(--card-bg); border: var(--border); border-radius: 12px; padding: 15px; min-height: 85vh; }
-        .sidebar-panel h3 { font-size: 0.75rem; color: var(--sofa-blue); text-transform: uppercase; border-bottom: var(--border); padding-bottom: 10px; margin-top: 0; }
+        .sidebar-panel { background: var(--card-bg); border-radius: 12px; padding: 15px; border: var(--border); height: fit-content; }
+        .sidebar-panel h3 { font-size: 0.7rem; color: var(--sofa-blue); text-transform: uppercase; margin-bottom: 15px; border-bottom: var(--border); padding-bottom: 8px; }
 
-        .side-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .side-rank { width: 20px; font-size: 0.7rem; color: var(--text-gray); }
-        .side-info { flex: 1; margin-left: 10px; }
-        .side-name { font-size: 0.8rem; font-weight: 600; display: block; }
-        .side-sub { font-size: 0.65rem; color: var(--text-gray); }
-        .side-val { font-size: 0.75rem; font-weight: 800; padding: 3px 6px; border-radius: 4px; min-width: 30px; text-align: center; }
+        /* Styl dla Top Oceny / Top Strzelcy */
+        .side-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .side-rank { width: 25px; color: var(--text-gray); font-size: 0.75rem; }
+        .side-info { flex: 1; }
+        .side-name { display: block; font-size: 0.85rem; font-weight: 600; }
+        .side-sub { font-size: 0.7rem; color: var(--text-gray); }
+        .side-val { padding: 4px 8px; border-radius: 4px; font-weight: 800; font-size: 0.75rem; min-width: 35px; text-align: center; }
         .val-rate { background: var(--rating-green); color: black; }
         .val-goal { background: #333; color: white; }
 
-        .league-card { background: var(--card-bg); border-radius: 12px; border: var(--border); margin-bottom: 15px; overflow: hidden; }
-        .league-header { background: rgba(255,255,255,0.05); padding: 8px 15px; font-size: 0.7rem; font-weight: 800; color: var(--text-gray); }
-        
-        .match-row { display: flex; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .m-time { width: 40px; color: var(--accent-red); font-size: 0.7rem; font-weight: 800; }
-        .m-teams { flex: 1; font-size: 0.9rem; font-weight: 600; }
-        .m-score { font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 800; color: var(--sofa-blue); }
+        /* Karty meczów */
+        .league-card { margin-bottom: 20px; }
+        .league-header { font-size: 0.75rem; color: var(--text-gray); margin-bottom: 10px; font-weight: bold; }
+        .match-row { 
+            background: var(--card-bg); 
+            border: var(--border); 
+            border-radius: 8px; 
+            padding: 15px; 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        .match-row:hover { background: #1a1a1a; }
+        .m-live { color: var(--accent-red); font-weight: 800; font-size: 0.65rem; width: 40px; }
+        .m-teams { flex: 1; font-weight: 600; font-size: 0.95rem; }
+        .m-score { font-family: 'Courier New', monospace; font-size: 1.2rem; font-weight: 800; color: var(--sofa-blue); }
 
-        .match-details { display: none; background: #0a0a0a; border-top: 1px solid #222; padding: 15px; }
+        /* Szczegóły meczu i boisko */
+        .match-details { display: none; background: #0f0f0f; border: var(--border); border-top: none; border-radius: 0 0 8px 8px; padding: 15px; margin-top: -5px; }
         .match-details.active { display: block; }
-        
-        .tabs { display: flex; gap: 15px; border-bottom: 1px solid #222; margin-bottom: 15px; }
+        .tabs { display: flex; gap: 20px; border-bottom: 1px solid #222; margin-bottom: 15px; }
         .tab { padding: 8px 0; font-size: 0.7rem; font-weight: 800; color: var(--text-gray); cursor: pointer; text-transform: uppercase; }
         .tab.active { color: var(--sofa-blue); border-bottom: 2px solid var(--sofa-blue); }
 
-        .event-line { font-size: 0.8rem; margin-bottom: 8px; padding: 4px 0; }
-        .pitch-view { background: url('boisko.jpg') no-repeat center; background-size: cover; min-height: 250px; border-radius: 8px; margin: 10px 0; border: 1px solid #333; }
-
-        @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } .sidebar-panel { display: none; } }
+        .pitch-view { 
+            background: url('boisko.jpg') no-repeat center; 
+            background-size: cover; 
+            height: 220px; 
+            border-radius: 8px; 
+            display: flex; 
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+        .pitch-side { flex: 1; padding: 10px; background: rgba(0,0,0,0.5); }
+        .player-line { font-size: 0.7rem; margin: 3px 0; display: flex; gap: 8px; }
+        .p-num { color: var(--text-gray); width: 15px; }
     </style>
 </head>
 <body>
 
+<div class="bg-overlay"></div>
+
 <nav>
-    <a href="#">HOME</a>
-    <a href="#" style="border-bottom: 2px solid white;">MECZE</a>
-    <a href="#">WIADOMOŚCI</a>
+    <a href="#">Home</a>
+    <a href="#" style="border-bottom: 2px solid white;">Mecze</a>
+    <a href="#">Wiadomości</a>
 </nav>
 
 <div class="main-grid">
     <aside class="sidebar-panel">
         <h3>Top Oceny</h3>
-        <select id="ratingSelect" style="width:100%; margin-bottom:15px; background:#111; color:white; border:1px solid #333; padding:5px; border-radius:5px;" onchange="renderLeftPanel()">
+        <select id="ratingSelect" onchange="renderLeftPanel()" style="width:100%; background:#1a1a1a; color:white; border:1px solid #333; padding:5px; margin-bottom:15px; border-radius:4px; font-size:0.75rem;">
+            <option value="pl">Premier League</option>
             <option value="cl">Champions League</option>
-            <option value="pl" selected>Premier League</option>
             <option value="ek">Ekstraklasa</option>
         </select>
         <div id="left-list"></div>
     </aside>
 
-    <main>
-        <div id="live-matches">Ładowanie wyników na żywo...</div>
+    <main id="live-matches">
+        <div style="text-align:center; padding:50px; color:gray;">Pobieranie aktualnych wyników...</div>
     </main>
 
     <aside class="sidebar-panel">
@@ -101,150 +129,171 @@
 
 <script>
 const API_KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
-const SPORT_API_HOST = 'sportapi7.p.rapidapi.com';
+const HOST = 'sportapi7.p.rapidapi.com';
 
-const LEAGUE_CONFIG = {
-    cl: { tournamentId: 7, seasonId: 63842 },
-    pl: { tournamentId: 17, seasonId: 61627 },
-    ek: { tournamentId: 106, seasonId: 61971 }
+const LEAGUES = {
+    pl: { tid: 17, sid: 61627 },
+    cl: { tid: 7, sid: 63842 },
+    ek: { tid: 106, sid: 61971 }
 };
 
-// 1. POBIERANIE MECZÓW LIVE
+// 1. MECZE LIVE
 async function fetchLive() {
     try {
-        const res = await fetch(`https://${SPORT_API_HOST}/api/v1/sport/football/events/live`, {
-            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
+        const res = await fetch(`https://${HOST}/api/v1/sport/football/events/live`, {
+            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': HOST }
         });
         const data = await res.json();
-        renderLiveContent(data.events || []);
+        renderMatches(data.events || []);
     } catch (e) {
-        document.getElementById('live-matches').innerHTML = "Błąd połączenia z API.";
+        document.getElementById('live-matches').innerHTML = "Błąd API. Sprawdź limity RapidAPI.";
     }
 }
 
-function renderLiveContent(events) {
+function renderMatches(events) {
     const container = document.getElementById('live-matches');
-    if(events.length === 0) {
-        container.innerHTML = "<div class='league-card' style='padding:20px; text-align:center;'>Brak meczów na żywo.</div>";
+    if (events.length === 0) {
+        container.innerHTML = "<div class='match-row' style='justify-content:center;'>Obecnie brak meczów na żywo.</div>";
         return;
     }
-    const leagues = {};
-    events.forEach(ev => {
-        const lName = ev.tournament.name;
-        if(!leagues[lName]) leagues[lName] = [];
-        leagues[lName].push(ev);
+
+    const grouped = {};
+    events.forEach(e => {
+        const lName = e.tournament.name;
+        if (!grouped[lName]) grouped[lName] = [];
+        grouped[lName].push(e);
     });
-    container.innerHTML = Object.keys(leagues).map(lName => `
+
+    container.innerHTML = Object.keys(grouped).map(league => `
         <div class="league-card">
-            <div class="league-header">${lName}</div>
-            ${leagues[lName].map(m => `
-                <div class="match-row" onclick="toggleMatch(${m.id})">
-                    <div class="m-time">LIVE</div>
-                    <div class="m-teams"><div>${m.homeTeam.name}</div><div>${m.awayTeam.name}</div></div>
+            <div class="league-header">${league}</div>
+            ${grouped[league].map(m => `
+                <div class="match-row" onclick="toggleDetails(${m.id})">
+                    <div class="m-live">LIVE</div>
+                    <div class="m-teams">
+                        <div>${m.homeTeam.name}</div>
+                        <div>${m.awayTeam.name}</div>
+                    </div>
                     <div class="m-score">${m.homeScore.current} - ${m.awayScore.current}</div>
                 </div>
-                <div id="details-${m.id}" class="match-details">
+                <div id="det-${m.id}" class="match-details">
                     <div class="tabs">
-                        <div class="tab active" onclick="switchTab(event, ${m.id}, 'info')">Szczegóły</div>
-                        <div class="tab" onclick="switchTab(event, ${m.id}, 'lineup')">Składy</div>
-                        <div class="tab" onclick="switchTab(event, ${m.id}, 'stats')">Statystyki</div>
+                        <div class="tab active" onclick="switchTab(event, ${m.id}, 'lineup')">Składy</div>
+                        <div class="tab" onclick="switchTab(event, ${m.id}, 'info')">Zdarzenia</div>
                     </div>
-                    <div id="content-${m.id}" class="detail-content">Wybierz zakładkę...</div>
+                    <div id="cnt-${m.id}">Kliknij "Składy", aby załadować...</div>
                 </div>
             `).join('')}
         </div>
     `).join('');
 }
 
-// 2. OBSŁUGA ROZWIJANIA I ZAKŁADEK
-function toggleMatch(id) {
-    const el = document.getElementById(`details-${id}`);
-    const isActive = el.classList.contains('active');
-    document.querySelectorAll('.match-details').forEach(d => d.classList.remove('active'));
-    if(!isActive) {
-        el.classList.add('active');
-        loadTabContent(id, 'info');
+// 2. SKŁADY (LINEUPS) - TO BYŁO ZEPSUTE
+async function loadLineup(matchId) {
+    const cnt = document.getElementById(`cnt-${matchId}`);
+    cnt.innerHTML = "Ładowanie składów...";
+    
+    try {
+        const res = await fetch(`https://${HOST}/api/v1/event/${matchId}/lineups`, {
+            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': HOST }
+        });
+        const data = await res.json();
+        
+        if (!data.home || !data.away) {
+            cnt.innerHTML = "<div style='padding:20px; text-align:center; color:gray;'>Składy nie są jeszcze potwierdzone.</div>";
+            return;
+        }
+
+        cnt.innerHTML = `
+            <div class="pitch-view">
+                <div class="pitch-side">
+                    <div style="color:var(--sofa-blue); font-weight:bold; margin-bottom:10px; font-size:0.75rem;">${data.home.players[0].team.shortName}</div>
+                    ${data.home.players.slice(0,11).map(p => `
+                        <div class="player-line"><span class="p-num">${p.shirtNumber}</span> ${p.player.name}</div>
+                    `).join('')}
+                </div>
+                <div class="pitch-side" style="text-align:right;">
+                    <div style="color:var(--accent-red); font-weight:bold; margin-bottom:10px; font-size:0.75rem;">${data.away.players[0].team.shortName}</div>
+                    ${data.away.players.slice(0,11).map(p => `
+                        <div class="player-line" style="justify-content: flex-end;">${p.player.name} <span class="p-num">${p.shirtNumber}</span></div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (e) {
+        cnt.innerHTML = "Błąd pobierania składów.";
     }
 }
 
-async function loadTabContent(matchId, tab) {
-    const content = document.getElementById(`content-${matchId}`);
-    content.innerHTML = "Ładowanie...";
-
-    try {
-        if (tab === 'lineup') {
-            const res = await fetch(`https://${SPORT_API_HOST}/api/v1/event/${matchId}/lineups`, {
-                headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
-            });
-            const data = await res.json();
-            if (!data.home) { content.innerHTML = "Składy niedostępne."; return; }
-
-            content.innerHTML = `
-                <div class="pitch-view" style="display:flex; background-image: url('boisko.jpg');">
-                    <div style="flex:1; padding:10px; background: rgba(0,0,0,0.4)">
-                        <div style="color:var(--sofa-blue); font-weight:bold; margin-bottom:5px;">${data.home.players[0].team.shortName}</div>
-                        ${data.home.players.slice(0,11).map(p => `<div style="font-size:0.7rem;">${p.shirtNumber}. ${p.player.name}</div>`).join('')}
-                    </div>
-                    <div style="flex:1; padding:10px; text-align:right; background: rgba(0,0,0,0.4)">
-                        <div style="color:var(--accent-red); font-weight:bold; margin-bottom:5px;">${data.away.players[0].team.shortName}</div>
-                        ${data.away.players.slice(0,11).map(p => `<div style="font-size:0.7rem;">${p.player.name} .${p.shirtNumber}</div>`).join('')}
-                    </div>
-                </div>`;
-        } else if (tab === 'info') {
-            const res = await fetch(`https://${SPORT_API_HOST}/api/v1/event/${matchId}/incidents`, {
-                headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
-            });
-            const data = await res.json();
-            content.innerHTML = (data.incidents || []).map(i => `
-                <div class="event-line" style="${i.isHome ? '' : 'text-align:right'}">
-                    ${i.time}' ${i.incidentType === 'goal' ? '⚽' : '🟨'} ${i.player ? i.player.name : ''}
-                </div>`).join('') || "Czekamy na akcje...";
-        } else {
-            content.innerHTML = "Statystyki zostaną zaktualizowane po zakończeniu połowy.";
-        }
-    } catch (e) { content.innerHTML = "Błąd ładowania."; }
-}
-
-function switchTab(e, id, tab) {
-    e.stopPropagation();
-    e.target.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    e.target.classList.add('active');
-    loadTabContent(id, tab);
-}
-
-// 3. PANELE BOCZNE
+// 3. PANELE BOCZNE (DYNAMICZNE)
 async function renderLeftPanel() {
-    const leagueKey = document.getElementById('ratingSelect').value;
-    const config = LEAGUE_CONFIG[leagueKey];
+    const val = document.getElementById('ratingSelect').value;
+    const conf = LEAGUES[val];
+    const list = document.getElementById('left-list');
+    list.innerHTML = "Ładowanie...";
+
     try {
-        const res = await fetch(`https://${SPORT_API_HOST}/api/v1/unique-tournament/${config.tournamentId}/season/${config.seasonId}/statistics?type=rating&count=5`, {
-            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
+        const res = await fetch(`https://${HOST}/api/v1/unique-tournament/${conf.tid}/season/${conf.sid}/statistics?type=rating&count=5`, {
+            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': HOST }
         });
         const data = await res.json();
-        document.getElementById('left-list').innerHTML = (data.statistics || []).map((p, i) => `
+        list.innerHTML = (data.statistics || []).map((p, i) => `
             <div class="side-item">
                 <div class="side-rank">${i+1}</div>
-                <div class="side-info"><span class="side-name">${p.player.name}</span><span class="side-sub">${p.team.name}</span></div>
+                <div class="side-info">
+                    <span class="side-name">${p.player.name}</span>
+                    <span class="side-sub">${p.team.shortName}</span>
+                </div>
                 <div class="side-val val-rate">${p.rating.toFixed(2)}</div>
-            </div>`).join('');
-    } catch (e) { document.getElementById('left-list').innerHTML = "Błąd ocen."; }
+            </div>
+        `).join('');
+    } catch (e) { list.innerHTML = "Brak danych ocen."; }
 }
 
 function renderRightPanel() {
-    const scorers = [{n: "E. Haaland", c: "Man City", v: "18"}, {n: "R. Lewandowski", c: "Barca", v: "15"}, {n: "H. Kane", c: "Bayern", v: "14"}];
-    document.getElementById('right-list').innerHTML = scorers.map((p, i) => `
+    // Statyczna lista dla przykładu, można zmienić na fetch analogicznie do ocen
+    const top = [
+        {name: "Erling Haaland", team: "Man City", goals: 18},
+        {name: "Robert Lewandowski", team: "Barcelona", goals: 15},
+        {name: "Harry Kane", team: "Bayern", goals: 14},
+        {name: "Mo Salah", team: "Liverpool", goals: 14}
+    ];
+    document.getElementById('right-list').innerHTML = top.map((p, i) => `
         <div class="side-item">
             <div class="side-rank">${i+1}</div>
-            <div class="side-info"><span class="side-name">${p.n}</span><span class="side-sub">${p.c}</span></div>
-            <div class="side-val val-goal">${p.v}</div>
-        </div>`).join('');
+            <div class="side-info">
+                <span class="side-name">${p.name}</span>
+                <span class="side-sub">${p.team}</span>
+            </div>
+            <div class="side-val val-goal">${p.goals}</div>
+        </div>
+    `).join('');
+}
+
+// POMOCNICZE
+function toggleDetails(id) {
+    const el = document.getElementById(`det-${id}`);
+    const isOpen = el.classList.contains('active');
+    document.querySelectorAll('.match-details').forEach(d => d.classList.remove('active'));
+    if (!isOpen) {
+        el.classList.add('active');
+        loadLineup(id);
+    }
+}
+
+function switchTab(e, id, type) {
+    e.stopPropagation();
+    const parent = e.target.parentElement;
+    parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    if (type === 'lineup') loadLineup(id);
 }
 
 // START
 fetchLive();
 renderLeftPanel();
 renderRightPanel();
-setInterval(fetchLive, 60000);
+setInterval(fetchLive, 60000); // Odświeżaj co minutę
 </script>
 </body>
 </html>

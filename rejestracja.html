@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Football Connect - Zarejestruj się</title>
+    <style>
+        body { background-color: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .reg-box { background: #1e293b; padding: 30px; border-radius: 12px; width: 320px; text-align: center; border: 1px solid #22c55e; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; background: #334155; color: white; box-sizing: border-box; }
+        .btn-reg { width: 100%; padding: 10px; background: #22c55e; border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        .back { margin-top: 15px; font-size: 0.8rem; }
+        .back a { color: #94a3b8; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="reg-box">
+        <h1>⚽ Dołącz do gry</h1>
+        <form id="reg-form">
+            <input type="email" id="reg-email" placeholder="Twój Email" required>
+            <input type="password" id="reg-password" placeholder="Hasło (min. 6 znaków)" required>
+            <button type="submit" class="btn-reg">Stwórz konto</button>
+        </form>
+        <p class="back"><a href="index.html">← Wróć do logowania</a></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0NGpFKoH7jru7Uz_1PDT_6Oj7XY7m0IQ",
+            authDomain: "footballportal-c05b3.firebaseapp.com",
+            projectId: "footballportal-c05b3",
+            storageBucket: "footballportal-c05b3.firebasestorage.app",
+            appId: "1:445132841755:web:fee5c072ba2c3f8355a9be"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('reg-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-password').value;
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+                alert("Konto stworzone! Teraz możesz się zalogować.");
+                window.location.href = "index.html";
+            } catch (err) {
+                alert("Błąd rejestracji: " + err.message);
+            }
+        };
+    </script>
+</body>
+</html>

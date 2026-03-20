@@ -55,76 +55,91 @@
 const KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
 const HOST = 'sportapi7.p.rapidapi.com';
 
-// FUNKCJA STARTOWA
 async function init() {
-    renderMatches(); // Renderuj mecze (w tym testowy)
-    fetchTopPlayers(); // Pobierz oceny
+    await fetchLiveMatches();
+    fetchTopRatings();
 }
 
-function renderMatches() {
-    const list = document.getElementById('matches-list');
-    
-    // Dodajemy "Mecz Testowy", żebyś zawsze miał w co kliknąć
-    const testMatch = {
-        id: "demo",
-        home: "Bournemouth",
-        away: "Man Utd",
-        score: "0 - 0"
-    };
+async function fetchLiveMatches() {
+    const container = document.getElementById('matches-col') || document.getElementById('center-col');
+    try {
+        const res = await fetch(`https://${HOST}/api/v1/sport/football/events/live`, {
+            headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
+        });
+        const data = await res.json();
+        let events = data.events || [];
 
-    list.innerHTML = `
-        <div class="match-box" onclick="toggleDetails('demo')">
-            <div class="match-header">PREMIER LEAGUE - TRYB TESTOWY</div>
-            <div class="match-body">
-                <span>${testMatch.home}</span>
-                <span class="score">${testMatch.score}</span>
-                <span>${testMatch.away}</span>
-            </div>
-            <div id="det-demo" class="details">
-                <div class="pitch">
-                    <div class="half" id="home-lineup">Pobieranie...</div>
-                    <div class="half" id="away-lineup" style="text-align:right">Pobieranie...</div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function toggleDetails(id) {
-    const el = document.getElementById(`det-${id}`);
-    el.classList.toggle('active');
-    
-    if(id === "demo") {
-        // Symulacja danych dla meczu testowego
-        showLineup("home-lineup", ["Neto", "Smith", "Zabarnyi", "Senesi", "Kelly", "Cook", "Christie", "Kluivert", "Semenyo", "Tavernier", "Solanke"]);
-        showLineup("away-lineup", ["Onana", "Dalot", "Maguire", "Kambwala", "Wan-Bissaka", "Casemiro", "Mainoo", "Garnacho", "Fernandes", "Rashford", "Hojlund"], true);
+        // Tryb awaryjny: jeśli API nie zwraca meczów, dodajemy testowy
+        if (events.length === 0) {
+            events = [{
+                id: "test_match",
+                tournament: { name: "PREMIER LEAGUE (MECZ TESTOWY)" },
+                homeTeam: { name: "Bournemouth" },
+                awayTeam: { name: "Man Utd" },
+                homeScore: { current: 0 },
+                awayScore: { current: 0 }
+            }];
+        }
+        renderMatches(events, container);
+    } catch (e) {
+        container.innerHTML = "Błąd połączenia z API.";
     }
 }
 
-function showLineup(containerId, players, reverse = false) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = players.map((p, i) => `
-        <div class="player" style="${reverse ? 'flex-direction:row-reverse' : ''}">
-            <span class="num">${i+1}</span> <span>${p}</span>
+function renderMatches(events, container) {
+    container.innerHTML = events.map(m => `
+        <div class="match-card" style="background:#141414; border:1px solid #222; margin-bottom:10px; border-radius:12px; overflow:hidden;">
+            <div style="padding:10px; font-size:10px; color:gray; background:rgba(255,255,255,0.02);">${m.tournament.name}</div>
+            <div onclick="toggleDetails('${m.id}')" style="padding:15px; display:flex; justify-content:space-between; cursor:pointer;">
+                <span>${m.homeTeam.name}</span>
+                <span style="color:#0047ff; font-weight:bold;">${m.homeScore.current} - ${m.awayScore.current}</span>
+                <span>${m.awayTeam.name}</span>
+            </div>
+            <div id="details-${m.id}" style="display:none; padding:10px; background:#000;">
+                <div class="pitch" style="background:url('boisko.jpg') no-repeat center; background-size:cover; aspect-ratio:16/9; display:flex; border:1px solid #333;">
+                    <div id="home-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5);"></div>
+                    <div id="away-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5); text-align:right;"></div>
+                </div>
+            </div>
         </div>
     `).join('');
 }
 
-async function fetchTopPlayers() {
+async function toggleDetails(id) {
+    const el = document.getElementById(`details-${id}`);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    
+    if (id === "test_match") {
+        fillLineup(`home-${id}`, ["Neto", "Smith", "Cook", "Solanke"]);
+        fillLineup(`away-${id}`, ["Onana", "Dalot", "Mainoo", "Hojlund"], true);
+    } else {
+        fetchActualLineup(id);
+    }
+}
+
+function fillLineup(containerId, players, isAway = false) {
+    document.getElementById(containerId).innerHTML = players.map((p, i) => `
+        <div style="font-size:11px; margin:2px 0; display:flex; ${isAway ? 'flex-direction:row-reverse' : ''}">
+            <span style="color:#0047ff; font-weight:bold; width:20px;">${i+1}</span>
+            <span>${p}</span>
+        </div>
+    `).join('');
+}
+
+async function fetchTopRatings() {
+    const list = document.getElementById('ratings-list') || document.getElementById('ratings');
     try {
         const res = await fetch(`https://${HOST}/api/v1/unique-tournament/17/season/61627/statistics?type=rating&count=5`, {
             headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
         });
         const data = await res.json();
-        document.getElementById('ratings').innerHTML = data.statistics.map(s => `
-            <div class="player" style="margin-bottom:8px">
-                <span class="num" style="background: #00d24d; color:black; padding:2px 5px; border-radius:3px">${s.rating.toFixed(1)}</span>
-                ${s.player.name}
+        list.innerHTML = data.statistics.map(s => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
+                <span>${s.player.name}</span>
+                <span style="background:#00d24d; color:black; padding:2px 4px; border-radius:3px; font-weight:bold;">${s.rating.toFixed(1)}</span>
             </div>
         `).join('');
-    } catch(e) {
-        document.getElementById('ratings').innerHTML = "Błąd API lub limit wygasł.";
-    }
+    } catch (e) { list.innerHTML = "Brak danych (limit API)."; }
 }
 
 init();

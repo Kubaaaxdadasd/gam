@@ -10,7 +10,7 @@
         nav a { color: white; text-decoration: none; font-size: 0.9rem; }
         .news-container { max-width: 800px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1e293b; }
-        .mecz-card { transition: transform 0.2s; border-radius: 8px; }
+        .mecz-card { transition: transform 0.2s; border-radius: 8px; border: 1px solid #eee; }
         .mecz-card:hover { transform: scale(1.01); background: #f8fafc; }
     </style>
 </head>
@@ -73,8 +73,6 @@ async function zaladujMecze() {
                 meczDiv.style.display = "flex";
                 meczDiv.style.justifyContent = "space-between";
                 meczDiv.style.alignItems = "center";
-                meczDiv.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
-                meczDiv.style.border = "1px solid #eee";
 
                 meczDiv.innerHTML = `
                     <div style="flex: 1; text-align: right;"><strong>${mecz.homeTeam.shortName || mecz.homeTeam.name}</strong> <img src="${mecz.homeTeam.crest}" width="20" style="vertical-align:middle; margin-left:5px;"></div>
@@ -96,39 +94,45 @@ async function zaladujMecze() {
                         meczDiv.style.borderRadius = "8px 8px 0 0";
                         
                         if (detaleDiv.innerHTML === "") {
-                            detaleDiv.innerHTML = "<small>Pobieranie składów i detali...</small>";
+                            detaleDiv.innerHTML = "<small>Pobieranie szczegółów...</small>";
                             try {
                                 const res = await fetch(`${proxy}https://api.football-data.org/v4/matches/${mecz.id}`, {
                                     headers: { 'X-Auth-Token': MY_TOKEN }
                                 });
                                 const detale = await res.json();
 
-                                // GOLE
+                                // 1. Sprawdzanie GOLE (odporniejsze)
                                 let goalsHtml = "";
-                                if (detale.goals && detale.goals.length > 0) {
-                                    goalsHtml = `<div style="margin-bottom:10px; color: #059669;">⚽ <b>Gole:</b> ${detale.goals.map(g => `${g.scorer.name} (${g.minute}')`).join(', ')}</div>`;
+                                const scorers = detale.goals || [];
+                                if (scorers.length > 0) {
+                                    goalsHtml = `<div style="margin-bottom:10px; color: #059669;">⚽ <b>Gole:</b> ${scorers.map(g => `${g.scorer.name} (${g.minute}')`).join(', ')}</div>`;
+                                } else if (detale.status === 'FINISHED' || detale.status === 'IN_PLAY') {
+                                    goalsHtml = `<div style="margin-bottom:10px; color: #94a3b8; font-size: 0.8rem;"><i>Szczegóły goli niedostępne w planie darmowym dla tej ligi.</i></div>`;
                                 }
 
-                                // SKŁADY
+                                // 2. Sprawdzanie SKŁADY
                                 let lineupsHtml = "";
-                                if (detale.homeTeam.lineup && detale.homeTeam.lineup.length > 0) {
+                                const homeLineup = detale.homeTeam.lineup || [];
+                                const awayLineup = detale.awayTeam.lineup || [];
+
+                                if (homeLineup.length > 0) {
                                     lineupsHtml = `
                                         <div style="display: flex; gap: 15px; margin-top: 10px;">
                                             <div style="flex: 1; background: #fff; padding: 8px; border-radius: 5px; border: 1px solid #f1f5f9;">
                                                 <b style="font-size: 0.75rem; display:block; border-bottom:1px solid #eee; margin-bottom:5px;">${detale.homeTeam.shortName}</b>
                                                 <ul style="padding: 0; list-style: none; font-size: 0.8rem; margin:0;">
-                                                    ${detale.homeTeam.lineup.map(p => `<li><small style="color:#64748b">${p.shirtNumber}.</small> ${p.name}</li>`).join('')}
+                                                    ${homeLineup.map(p => `<li><small style="color:#64748b">${p.shirtNumber || ''}</small> ${p.name}</li>`).join('')}
                                                 </ul>
                                             </div>
                                             <div style="flex: 1; background: #fff; padding: 8px; border-radius: 5px; border: 1px solid #f1f5f9;">
                                                 <b style="font-size: 0.75rem; display:block; border-bottom:1px solid #eee; margin-bottom:5px;">${detale.awayTeam.shortName}</b>
                                                 <ul style="padding: 0; list-style: none; font-size: 0.8rem; margin:0;">
-                                                    ${detale.awayTeam.lineup.map(p => `<li><small style="color:#64748b">${p.shirtNumber}.</small> ${p.name}</li>`).join('')}
+                                                    ${awayLineup.map(p => `<li><small style="color:#64748b">${p.shirtNumber || ''}</small> ${p.name}</li>`).join('')}
                                                 </ul>
                                             </div>
                                         </div>`;
                                 } else {
-                                    lineupsHtml = `<p style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">Składy nie są jeszcze dostępne.</p>`;
+                                    lineupsHtml = `<p style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">Składy dostępne głównie dla lig TOP (np. Premier League).</p>`;
                                 }
 
                                 detaleDiv.innerHTML = `
@@ -137,7 +141,7 @@ async function zaladujMecze() {
                                         <div style="font-weight: bold; margin-bottom: 5px; color: #1e293b;">📋 Składy wyjściowe:</div>
                                         ${lineupsHtml}
                                         <div style="border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 5px; font-size: 0.75rem; color: #94a3b8;">
-                                            🏟️ ${detale.venue || 'Brak danych'} | ⚖️ ${detale.referees[0]?.name || 'Sędzia nieznany'}
+                                            🏟️ ${detale.venue || 'Brak danych'} | ⚖️ ${detale.referees?.[0]?.name || 'Sędzia nieznany'}
                                         </div>
                                     </div>`;
                             } catch (e) {

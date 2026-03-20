@@ -56,12 +56,12 @@ const KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
 const HOST = 'sportapi7.p.rapidapi.com';
 
 async function init() {
-    await fetchLiveMatches();
-    fetchTopRatings();
+    await fetchMatches();
+    fetchTopPlayers();
 }
 
-async function fetchLiveMatches() {
-    const container = document.getElementById('matches-col') || document.getElementById('center-col');
+async function fetchMatches() {
+    const col = document.getElementById('matches-col') || document.body;
     try {
         const res = await fetch(`https://${HOST}/api/v1/sport/football/events/live`, {
             headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
@@ -69,77 +69,75 @@ async function fetchLiveMatches() {
         const data = await res.json();
         let events = data.events || [];
 
-        // Tryb awaryjny: jeśli API nie zwraca meczów, dodajemy testowy
+        // TRYB TESTOWY: Jeśli API jest puste, dodajemy mecz do kliknięcia
         if (events.length === 0) {
             events = [{
-                id: "test_match",
-                tournament: { name: "PREMIER LEAGUE (MECZ TESTOWY)" },
+                id: "test",
+                tournament: { name: "PREMIER LEAGUE (TEST)" },
                 homeTeam: { name: "Bournemouth" },
                 awayTeam: { name: "Man Utd" },
-                homeScore: { current: 0 },
-                awayScore: { current: 0 }
+                homeScore: { current: 0 }, awayScore: { current: 0 }
             }];
         }
-        renderMatches(events, container);
-    } catch (e) {
-        container.innerHTML = "Błąd połączenia z API.";
-    }
+        renderUI(events, col);
+    } catch (e) { console.error("Błąd API"); }
 }
 
-function renderMatches(events, container) {
-    container.innerHTML = events.map(m => `
-        <div class="match-card" style="background:#141414; border:1px solid #222; margin-bottom:10px; border-radius:12px; overflow:hidden;">
-            <div style="padding:10px; font-size:10px; color:gray; background:rgba(255,255,255,0.02);">${m.tournament.name}</div>
-            <div onclick="toggleDetails('${m.id}')" style="padding:15px; display:flex; justify-content:space-between; cursor:pointer;">
+function renderUI(events, col) {
+    col.innerHTML = events.map(m => `
+        <div style="background:#141414; border:1px solid #333; margin:10px auto; max-width:600px; border-radius:12px; overflow:hidden;">
+            <div style="padding:15px; display:flex; justify-content:space-between; cursor:pointer;" onclick="showPitch('${m.id}')">
                 <span>${m.homeTeam.name}</span>
                 <span style="color:#0047ff; font-weight:bold;">${m.homeScore.current} - ${m.awayScore.current}</span>
                 <span>${m.awayTeam.name}</span>
             </div>
-            <div id="details-${m.id}" style="display:none; padding:10px; background:#000;">
-                <div class="pitch" style="background:url('boisko.jpg') no-repeat center; background-size:cover; aspect-ratio:16/9; display:flex; border:1px solid #333;">
-                    <div id="home-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5);"></div>
-                    <div id="away-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5); text-align:right;"></div>
+            <div id="pitch-${m.id}" style="display:none; padding:10px; background:#000;">
+                <div style="background:url('boisko.jpg') no-repeat center; background-size:cover; aspect-ratio:16/9; display:flex; border:1px solid #444;">
+                    <div id="h-line-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5);"></div>
+                    <div id="a-line-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5); text-align:right;"></div>
                 </div>
             </div>
         </div>
     `).join('');
 }
 
-async function toggleDetails(id) {
-    const el = document.getElementById(`details-${id}`);
+async function showPitch(id) {
+    const el = document.getElementById(`pitch-${id}`);
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
     
-    if (id === "test_match") {
-        fillLineup(`home-${id}`, ["Neto", "Smith", "Cook", "Solanke"]);
-        fillLineup(`away-${id}`, ["Onana", "Dalot", "Mainoo", "Hojlund"], true);
+    if (id === "test") {
+        fillLineup(`h-line-${id}`, ["Neto", "Cook", "Solanke"]);
+        fillLineup(`a-line-${id}`, ["Onana", "Mainoo", "Hojlund"], true);
     } else {
-        fetchActualLineup(id);
+        try {
+            const res = await fetch(`https://${HOST}/api/v1/event/${id}/lineups`, {
+                headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
+            });
+            const d = await res.json();
+            fillLineup(`h-line-${id}`, d.home.players.map(p => p.player.name).slice(0,11));
+            fillLineup(`a-line-${id}`, d.away.players.map(p => p.player.name).slice(0,11), true);
+        } catch(e) { console.log("Brak składów w API"); }
     }
 }
 
-function fillLineup(containerId, players, isAway = false) {
-    document.getElementById(containerId).innerHTML = players.map((p, i) => `
-        <div style="font-size:11px; margin:2px 0; display:flex; ${isAway ? 'flex-direction:row-reverse' : ''}">
-            <span style="color:#0047ff; font-weight:bold; width:20px;">${i+1}</span>
-            <span>${p}</span>
+function fillLineup(divId, names, rev = false) {
+    document.getElementById(divId).innerHTML = names.map((n, i) => `
+        <div style="font-size:11px; margin:3px; display:flex; ${rev ? 'flex-direction:row-reverse' : ''}">
+            <b style="color:#0047ff; width:20px;">${i+1}</b> ${n}
         </div>
     `).join('');
 }
 
-async function fetchTopRatings() {
-    const list = document.getElementById('ratings-list') || document.getElementById('ratings');
+async function fetchTopPlayers() {
+    const r = document.getElementById('ratings-list');
+    if (!r) return;
     try {
         const res = await fetch(`https://${HOST}/api/v1/unique-tournament/17/season/61627/statistics?type=rating&count=5`, {
             headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
         });
-        const data = await res.json();
-        list.innerHTML = data.statistics.map(s => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
-                <span>${s.player.name}</span>
-                <span style="background:#00d24d; color:black; padding:2px 4px; border-radius:3px; font-weight:bold;">${s.rating.toFixed(1)}</span>
-            </div>
-        `).join('');
-    } catch (e) { list.innerHTML = "Brak danych (limit API)."; }
+        const d = await res.json();
+        r.innerHTML = d.statistics.map(s => `<div style="font-size:12px; margin-bottom:5px;">${s.player.name} (${s.rating.toFixed(2)})</div>`).join('');
+    } catch(e) { r.innerHTML = "Limit API"; }
 }
 
 init();

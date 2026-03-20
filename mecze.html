@@ -65,7 +65,7 @@
         .tab.active { color: var(--sofa-blue); border-bottom: 2px solid var(--sofa-blue); }
 
         .event-line { font-size: 0.8rem; margin-bottom: 8px; padding: 4px 0; }
-        .pitch-view { background: url('boisko.jpg') no-repeat center; background-size: cover; height: 180px; border-radius: 8px; margin: 10px 0; border: 1px solid #333; }
+        .pitch-view { background: url('boisko.jpg') no-repeat center; background-size: cover; min-height: 250px; border-radius: 8px; margin: 10px 0; border: 1px solid #333; }
 
         @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } .sidebar-panel { display: none; } }
     </style>
@@ -83,7 +83,7 @@
         <h3>Top Oceny</h3>
         <select id="ratingSelect" style="width:100%; margin-bottom:15px; background:#111; color:white; border:1px solid #333; padding:5px; border-radius:5px;" onchange="renderLeftPanel()">
             <option value="cl">Champions League</option>
-            <option value="pl">Premier League</option>
+            <option value="pl" selected>Premier League</option>
             <option value="ek">Ekstraklasa</option>
         </select>
         <div id="left-list"></div>
@@ -101,48 +101,25 @@
 
 <script>
 const API_KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
-const API_HOST = 'sportapi7.p.rapidapi.com';
+const SPORT_API_HOST = 'sportapi7.p.rapidapi.com';
 
-const playersData = {
-    cl: [{n: "Kylian Mbappé", c: "Real Madrid", v: "8.12"}, {n: "Erling Haaland", c: "Man City", v: "8.05"}, {n: "Vini Jr.", c: "Real Madrid", v: "7.98"}],
-    pl: [{n: "Mohamed Salah", c: "Liverpool", v: "8.05"}, {n: "Bukayo Saka", c: "Arsenal", v: "7.92"}, {n: "Cole Palmer", c: "Chelsea", v: "7.84"}],
-    ek: [{n: "Mikael Ishak", c: "Lech Poznań", v: "7.65"}, {n: "Marc Gual", c: "Legia Warszawa", v: "7.42"}, {n: "Ivi López", c: "Raków", v: "7.38"}]
+const LEAGUE_CONFIG = {
+    cl: { tournamentId: 7, seasonId: 63842 },
+    pl: { tournamentId: 17, seasonId: 61627 },
+    ek: { tournamentId: 106, seasonId: 61971 }
 };
 
-function renderLeftPanel() {
-    const league = document.getElementById('ratingSelect').value;
-    const players = playersData[league] || playersData.pl;
-    document.getElementById('left-list').innerHTML = players.map((p, i) => `
-        <div class="side-item">
-            <div class="side-rank">${i+1}</div>
-            <div class="side-info"><span class="side-name">${p.n}</span><span class="side-sub">${p.c}</span></div>
-            <div class="side-val val-rate">${p.v}</div>
-        </div>
-    `).join('');
-}
-
-function renderRightPanel() {
-    const scorers = [
-        {n: "Erling Haaland", c: "Man City", v: "18"}, {n: "Robert Lewandowski", c: "Barcelona", v: "15"},
-        {n: "Harry Kane", c: "Bayern", v: "14"}, {n: "M. Salah", c: "Liverpool", v: "14"}
-    ];
-    document.getElementById('right-list').innerHTML = scorers.map((p, i) => `
-        <div class="side-item">
-            <div class="side-rank">${i+1}</div>
-            <div class="side-info"><span class="side-name">${p.n}</span><span class="side-sub">${p.c}</span></div>
-            <div class="side-val val-goal">${p.v}</div>
-        </div>
-    `).join('');
-}
-
+// 1. POBIERANIE MECZÓW LIVE
 async function fetchLive() {
     try {
-        const res = await fetch(`https://${API_HOST}/api/v1/sport/football/events/live`, {
-            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
+        const res = await fetch(`https://${SPORT_API_HOST}/api/v1/sport/football/events/live`, {
+            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
         });
         const data = await res.json();
         renderLiveContent(data.events || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        document.getElementById('live-matches').innerHTML = "Błąd połączenia z API.";
+    }
 }
 
 function renderLiveContent(events) {
@@ -172,13 +149,14 @@ function renderLiveContent(events) {
                         <div class="tab" onclick="switchTab(event, ${m.id}, 'lineup')">Składy</div>
                         <div class="tab" onclick="switchTab(event, ${m.id}, 'stats')">Statystyki</div>
                     </div>
-                    <div id="content-${m.id}" class="detail-content">Ładowanie...</div>
+                    <div id="content-${m.id}" class="detail-content">Wybierz zakładkę...</div>
                 </div>
             `).join('')}
         </div>
     `).join('');
 }
 
+// 2. OBSŁUGA ROZWIJANIA I ZAKŁADEK
 function toggleMatch(id) {
     const el = document.getElementById(`details-${id}`);
     const isActive = el.classList.contains('active');
@@ -191,25 +169,40 @@ function toggleMatch(id) {
 
 async function loadTabContent(matchId, tab) {
     const content = document.getElementById(`content-${matchId}`);
-    if (tab === 'info') {
-        try {
-            const res = await fetch(`https://${API_HOST}/api/v1/event/${matchId}/incidents`, {
-                headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
+    content.innerHTML = "Ładowanie...";
+
+    try {
+        if (tab === 'lineup') {
+            const res = await fetch(`https://${SPORT_API_HOST}/api/v1/event/${matchId}/lineups`, {
+                headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
             });
             const data = await res.json();
-            const inc = data.incidents || [];
-            if (inc.length === 0) { content.innerHTML = "Brak zdarzeń."; return; }
-            content.innerHTML = inc.filter(i => i.incidentType === 'goal' || i.incidentType === 'card').map(i => {
-                const icon = i.incidentType === 'goal' ? '⚽' : (i.incidentClass === 'yellow' ? '🟨' : '🟥');
-                const side = i.isHome ? 'text-align:left' : 'text-align:right';
-                return `<div class="event-line" style="${side}"><b>${i.time}'</b> ${icon} ${i.player ? i.player.name : ''}</div>`;
-            }).join('');
-        } catch (e) { content.innerHTML = "Błąd pobierania zdarzeń."; }
-    } else if (tab === 'lineup') {
-        content.innerHTML = `<div class="pitch-view"></div>`;
-    } else {
-        content.innerHTML = "Statystyki dostępne wkrótce...";
-    }
+            if (!data.home) { content.innerHTML = "Składy niedostępne."; return; }
+
+            content.innerHTML = `
+                <div class="pitch-view" style="display:flex; background-image: url('boisko.jpg');">
+                    <div style="flex:1; padding:10px; background: rgba(0,0,0,0.4)">
+                        <div style="color:var(--sofa-blue); font-weight:bold; margin-bottom:5px;">${data.home.players[0].team.shortName}</div>
+                        ${data.home.players.slice(0,11).map(p => `<div style="font-size:0.7rem;">${p.shirtNumber}. ${p.player.name}</div>`).join('')}
+                    </div>
+                    <div style="flex:1; padding:10px; text-align:right; background: rgba(0,0,0,0.4)">
+                        <div style="color:var(--accent-red); font-weight:bold; margin-bottom:5px;">${data.away.players[0].team.shortName}</div>
+                        ${data.away.players.slice(0,11).map(p => `<div style="font-size:0.7rem;">${p.player.name} .${p.shirtNumber}</div>`).join('')}
+                    </div>
+                </div>`;
+        } else if (tab === 'info') {
+            const res = await fetch(`https://${SPORT_API_HOST}/api/v1/event/${matchId}/incidents`, {
+                headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
+            });
+            const data = await res.json();
+            content.innerHTML = (data.incidents || []).map(i => `
+                <div class="event-line" style="${i.isHome ? '' : 'text-align:right'}">
+                    ${i.time}' ${i.incidentType === 'goal' ? '⚽' : '🟨'} ${i.player ? i.player.name : ''}
+                </div>`).join('') || "Czekamy na akcje...";
+        } else {
+            content.innerHTML = "Statystyki zostaną zaktualizowane po zakończeniu połowy.";
+        }
+    } catch (e) { content.innerHTML = "Błąd ładowania."; }
 }
 
 function switchTab(e, id, tab) {
@@ -219,7 +212,35 @@ function switchTab(e, id, tab) {
     loadTabContent(id, tab);
 }
 
-// Start
+// 3. PANELE BOCZNE
+async function renderLeftPanel() {
+    const leagueKey = document.getElementById('ratingSelect').value;
+    const config = LEAGUE_CONFIG[leagueKey];
+    try {
+        const res = await fetch(`https://${SPORT_API_HOST}/api/v1/unique-tournament/${config.tournamentId}/season/${config.seasonId}/statistics?type=rating&count=5`, {
+            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': SPORT_API_HOST }
+        });
+        const data = await res.json();
+        document.getElementById('left-list').innerHTML = (data.statistics || []).map((p, i) => `
+            <div class="side-item">
+                <div class="side-rank">${i+1}</div>
+                <div class="side-info"><span class="side-name">${p.player.name}</span><span class="side-sub">${p.team.name}</span></div>
+                <div class="side-val val-rate">${p.rating.toFixed(2)}</div>
+            </div>`).join('');
+    } catch (e) { document.getElementById('left-list').innerHTML = "Błąd ocen."; }
+}
+
+function renderRightPanel() {
+    const scorers = [{n: "E. Haaland", c: "Man City", v: "18"}, {n: "R. Lewandowski", c: "Barca", v: "15"}, {n: "H. Kane", c: "Bayern", v: "14"}];
+    document.getElementById('right-list').innerHTML = scorers.map((p, i) => `
+        <div class="side-item">
+            <div class="side-rank">${i+1}</div>
+            <div class="side-info"><span class="side-name">${p.n}</span><span class="side-sub">${p.c}</span></div>
+            <div class="side-val val-goal">${p.v}</div>
+        </div>`).join('');
+}
+
+// START
 fetchLive();
 renderLeftPanel();
 renderRightPanel();

@@ -55,119 +55,59 @@
 const KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
 const HOST = 'sportapi7.p.rapidapi.com';
 
-function injectStyles() {
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .match-card { background: #111; border: 1px solid #333; border-radius: 12px; margin: 20px auto; max-width: 950px; color: white; font-family: sans-serif; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .match-info { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #1a1a1a; transition: 0.3s; }
-        .match-info:hover { background: #222; }
-        .pitch-container { 
-            position: relative;
-            background: url('boisko.jpg') no-repeat center; 
-            background-size: 100% 100%; 
-            aspect-ratio: 16/9; 
-            border-top: 2px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 10%; /* Osuwa składy od bramek do środka */
-        }
-        .team-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 200px;
-            z-index: 2;
-        }
-        .player-row { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            font-size: 14px; 
-            font-weight: 500;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-        .p-number { 
-            color: #0047ff; 
-            background: rgba(0, 71, 255, 0.1); 
-            border: 1px solid #0047ff;
-            border-radius: 4px;
-            width: 24px; 
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 11px;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-async function init() {
-    injectStyles();
-    const container = document.getElementById('matches-col') || document.body;
-    
+async function pobierzDane() {
+    // 1. MECZE NA ŻYWO
+    const matchesBox = document.getElementById('matches-col') || document.querySelector('.center-column');
     try {
         const res = await fetch(`https://${HOST}/api/v1/sport/football/events/live`, {
             headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
         });
         const data = await res.json();
-        let matches = data.events || [];
-
-        if (matches.length === 0) {
-            matches = [{
-                id: "demo_id",
-                tournament: { name: "PREMIER LEAGUE (MECZ TESTOWY)" },
-                homeTeam: { name: "Bournemouth" },
-                awayTeam: { name: "Man Utd" },
-                homeScore: { current: 1 },
-                awayScore: { current: 2 }
-            }];
-        }
         
-        container.innerHTML = matches.map(m => `
-            <div class="match-card">
-                <div style="padding: 10px; font-size: 11px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px;">${m.tournament.name}</div>
-                <div class="match-info" onclick="document.getElementById('p-${m.id}').style.display = (document.getElementById('p-${m.id}').style.display === 'none' ? 'flex' : 'none')">
-                    <span style="flex:1; font-size: 18px;">${m.homeTeam.name}</span>
-                    <span style="color:#0047ff; font-weight:900; font-size:28px; margin: 0 20px;">${m.homeScore.current} - ${m.awayScore.current}</span>
-                    <span style="flex:1; text-align:right; font-size: 18px;">${m.awayTeam.name}</span>
+        if (data.events && data.events.length > 0) {
+            matchesBox.innerHTML = data.events.map(m => `
+                <div class="match-card" style="background:#1a1a1a; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #333;">
+                    <div style="font-size:10px; color:#666; margin-bottom:5px;">${m.tournament.name}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>${m.homeTeam.name}</span>
+                        <b style="color:#0047ff; font-size:18px;">${m.homeScore.current} - ${m.awayScore.current}</b>
+                        <span>${m.awayTeam.name}</span>
+                    </div>
                 </div>
-                <div id="p-${m.id}" class="pitch-container" style="display:none;">
-                    <div id="home-players-${m.id}" class="team-list"></div>
-                    <div id="away-players-${m.id}" class="team-list" style="text-align:right;"></div>
+            `).join('');
+        } else {
+            matchesBox.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">Obecnie brak meczów na żywo.</div>';
+        }
+    } catch (e) { console.error("Błąd meczów"); }
+
+    // 2. PRAWDZIWE OCENY (Premier League - Season 61627)
+    const ratingsBox = document.getElementById('ratings-list');
+    try {
+        const res = await fetch(`https://${HOST}/api/v1/unique-tournament/17/season/61627/statistics?type=rating&count=5`, {
+            headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
+        });
+        const data = await res.json();
+        
+        if (data.statistics) {
+            ratingsBox.innerHTML = data.statistics.map(s => `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-size:13px;">
+                        <div style="font-weight:bold;">${s.player.name}</div>
+                        <div style="font-size:10px; color:gray;">${s.team.name}</div>
+                    </div>
+                    <div style="background:#00d24d; color:black; padding:2px 6px; border-radius:4px; font-weight:bold;">
+                        ${s.rating.toFixed(1)}
+                    </div>
                 </div>
-            </div>
-        `).join('');
-    } catch (e) { container.innerHTML = "<div style='color:white;text-align:center;'>Błąd API</div>"; }
+            `).join('');
+        }
+    } catch (e) { 
+        if(ratingsBox) ratingsBox.innerHTML = "Limit API lub błąd sezonu."; 
+    }
 }
 
-function renderLineup(containerId, players, isAway = false) {
-    const box = document.getElementById(containerId);
-    box.innerHTML = players.map((p, i) => `
-        <div class="player-row" style="${isAway ? 'flex-direction: row-reverse' : ''}">
-            <div class="p-number">${i+1}</div>
-            <span>${p}</span>
-        </div>
-    `).join('');
-}
-
-// Funkcja wywoływana przy kliknięciu (w demo używa statycznych danych)
-window.togglePitch = (id) => {
-    if (id === "demo_id") {
-        renderLineup(`home-players-${id}`, ["Neto", "Zabarnyi", "Cook", "Solanke", "Kluivert"]);
-        renderLineup(`away-players-${id}`, ["Onana", "Maguire", "Mainoo", "Fernandes", "Hojlund"], true);
-    }
-};
-
-// Dodajemy obsługę kliknięcia dla demo
-document.addEventListener('click', (e) => {
-    if(e.target.closest('.match-info')) {
-        window.togglePitch("demo_id");
-    }
-});
-
-init();
+// Uruchomienie
+window.onload = pobierzDane;
 </script>
 </body>
 </html>

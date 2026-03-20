@@ -8,44 +8,69 @@
         .login-box { background: #1e293b; padding: 30px; border-radius: 12px; width: 320px; text-align: center; }
         input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; background: #334155; color: white; box-sizing: border-box; }
         .btn-main { width: 100%; padding: 10px; background: #22c55e; border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        .btn-google {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    color: black;
+    border: none;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
     </style>
 </head>
 <body>
     <div class="login-box">
         <h1>⚽ Logowanie</h1>
-        <form id="login-form">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Hasło" required>
-            <button type="submit" class="btn-main">Wejdź na stadion</button>
-        </form>
+      <form id="login-form">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Hasło" required>
+    <button type="submit" class="btn-main">Wejdź na stadion</button>
+    
+    <button type="button" id="googleBtn" class="btn-google">Zaloguj przez Google</button>
+</form>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC0NGpFKoH7jru7Uz_1PDT_6Oj7XY7m0IQ",
-            authDomain: "footballportal-c05b3.firebaseapp.com",
-            projectId: "footballportal-c05b3",
-            storageBucket: "footballportal-c05b3.firebasestorage.app",
-            appId: "1:445132841755:web:fee5c072ba2c3f8355a9be"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyC0NGpFKoH7jru7Uz_1PDT_6Oj7XY7m0IQ",
+        authDomain: "footballportal-c05b3.firebaseapp.com",
+        projectId: "footballportal-c05b3",
+        storageBucket: "footballportal-c05b3.firebasestorage.app",
+        appId: "1:445132841755:web:fee5c072ba2c3f8355a9be"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-        document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                window.location.href = "dashboard.html"; // Po sukcesie lecisz do postów
-            } catch (err) {
-                alert("Błąd: " + err.message);
-            }
-        };
-    </script>
+    // Logowanie Google
+    document.getElementById('googleBtn').onclick = async () => {
+        try {
+            await signInWithPopup(auth, provider);
+            window.location.href = "dashboard.html";
+        } catch (err) {
+            alert("Błąd Google: " + err.message);
+        }
+    };
+
+    // Logowanie Email (Twój stary kod)
+    document.getElementById('login-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            window.location.href = "dashboard.html";
+        } catch (err) {
+            alert("Błąd: " + err.message);
+        }
+    };
+</script>
 </body>
 </html>

@@ -55,89 +55,94 @@
 const KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
 const HOST = 'sportapi7.p.rapidapi.com';
 
-async function init() {
-    await fetchMatches();
-    fetchTopPlayers();
+// Funkcja ustawiająca style, żeby nic się nie "rozjechało"
+function injectStyles() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .match-card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 10px auto; max-width: 800px; color: white; font-family: sans-serif; }
+        .match-info { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .pitch { background: url('boisko.jpg') no-repeat center; background-size: cover; aspect-ratio: 16/9; display: flex; border-top: 1px solid #333; }
+        .half { flex: 1; padding: 15px; background: rgba(0,0,0,0.6); }
+        .player-item { display: flex; gap: 8px; font-size: 12px; margin: 4px 0; }
+        .p-num { color: #0047ff; font-weight: bold; width: 20px; }
+    `;
+    document.head.appendChild(style);
 }
 
-async function fetchMatches() {
-    const col = document.getElementById('matches-col') || document.body;
+async function init() {
+    injectStyles();
+    const main = document.getElementById('matches-col') || document.getElementById('center-col') || document.body;
+    
     try {
         const res = await fetch(`https://${HOST}/api/v1/sport/football/events/live`, {
             headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
         });
         const data = await res.json();
-        let events = data.events || [];
+        let matches = data.events || [];
 
-        // TRYB TESTOWY: Jeśli API jest puste, dodajemy mecz do kliknięcia
-        if (events.length === 0) {
-            events = [{
-                id: "test",
-                tournament: { name: "PREMIER LEAGUE (TEST)" },
+        // Jeśli brak meczów live (częste u Ciebie), wymuszamy mecz testowy
+        if (matches.length === 0) {
+            matches = [{
+                id: "test_1",
+                tournament: { name: "PREMIER LEAGUE (TRYB TESTOWY)" },
                 homeTeam: { name: "Bournemouth" },
                 awayTeam: { name: "Man Utd" },
-                homeScore: { current: 0 }, awayScore: { current: 0 }
+                homeScore: { current: 1 },
+                awayScore: { current: 2 }
             }];
         }
-        renderUI(events, col);
-    } catch (e) { console.error("Błąd API"); }
-}
-
-function renderUI(events, col) {
-    col.innerHTML = events.map(m => `
-        <div style="background:#141414; border:1px solid #333; margin:10px auto; max-width:600px; border-radius:12px; overflow:hidden;">
-            <div style="padding:15px; display:flex; justify-content:space-between; cursor:pointer;" onclick="showPitch('${m.id}')">
-                <span>${m.homeTeam.name}</span>
-                <span style="color:#0047ff; font-weight:bold;">${m.homeScore.current} - ${m.awayScore.current}</span>
-                <span>${m.awayTeam.name}</span>
-            </div>
-            <div id="pitch-${m.id}" style="display:none; padding:10px; background:#000;">
-                <div style="background:url('boisko.jpg') no-repeat center; background-size:cover; aspect-ratio:16/9; display:flex; border:1px solid #444;">
-                    <div id="h-line-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5);"></div>
-                    <div id="a-line-${m.id}" style="flex:1; padding:10px; background:rgba(0,0,0,0.5); text-align:right;"></div>
+        
+        main.innerHTML = matches.map(m => `
+            <div class="match-card">
+                <div style="padding: 10px; font-size: 10px; color: #888; border-bottom: 1px solid #222;">${m.tournament.name}</div>
+                <div class="match-info" onclick="togglePitch('${m.id}')">
+                    <span style="flex:1">${m.homeTeam.name}</span>
+                    <span style="color:#0047ff; font-weight:900; font-size:20px;">${m.homeScore.current} - ${m.awayScore.current}</span>
+                    <span style="flex:1; text-align:right">${m.awayTeam.name}</span>
+                </div>
+                <div id="p-box-${m.id}" style="display:none;">
+                    <div class="pitch">
+                        <div id="home-l-${m.id}" class="half"></div>
+                        <div id="away-l-${m.id}" class="half" style="text-align:right"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
-}
-
-async function showPitch(id) {
-    const el = document.getElementById(`pitch-${id}`);
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    
-    if (id === "test") {
-        fillLineup(`h-line-${id}`, ["Neto", "Cook", "Solanke"]);
-        fillLineup(`a-line-${id}`, ["Onana", "Mainoo", "Hojlund"], true);
-    } else {
-        try {
-            const res = await fetch(`https://${HOST}/api/v1/event/${id}/lineups`, {
-                headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
-            });
-            const d = await res.json();
-            fillLineup(`h-line-${id}`, d.home.players.map(p => p.player.name).slice(0,11));
-            fillLineup(`a-line-${id}`, d.away.players.map(p => p.player.name).slice(0,11), true);
-        } catch(e) { console.log("Brak składów w API"); }
+        `).join('');
+    } catch (e) {
+        main.innerHTML = "<h2 style='color:white; text-align:center;'>Błąd klucza API lub brak połączenia.</h2>";
     }
 }
 
-function fillLineup(divId, names, rev = false) {
-    document.getElementById(divId).innerHTML = names.map((n, i) => `
-        <div style="font-size:11px; margin:3px; display:flex; ${rev ? 'flex-direction:row-reverse' : ''}">
-            <b style="color:#0047ff; width:20px;">${i+1}</b> ${n}
-        </div>
-    `).join('');
-}
+async function togglePitch(id) {
+    const box = document.getElementById(`p-box-${id}`);
+    if (box.style.display === "block") {
+        box.style.display = "none";
+        return;
+    }
+    box.style.display = "block";
 
-async function fetchTopPlayers() {
-    const r = document.getElementById('ratings-list');
-    if (!r) return;
-    try {
-        const res = await fetch(`https://${HOST}/api/v1/unique-tournament/17/season/61627/statistics?type=rating&count=5`, {
+    if (id === "test_1") {
+        renderPlayers(`home-l-${id}`, ["Neto", "Smith", "Cook", "Solanke", "Tavernier", "Kluivert"]);
+        renderPlayers(`away-l-${id}`, ["Onana", "Dalot", "Mainoo", "Fernandes", "Rashford", "Hojlund"], true);
+    } else {
+        // Pobieranie prawdziwych składów
+        const res = await fetch(`https://${HOST}/api/v1/event/${id}/lineups`, {
             headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
         });
         const d = await res.json();
-        r.innerHTML = d.statistics.map(s => `<div style="font-size:12px; margin-bottom:5px;">${s.player.name} (${s.rating.toFixed(2)})</div>`).join('');
-    } catch(e) { r.innerHTML = "Limit API"; }
+        if (d.home) {
+            renderPlayers(`home-l-${id}`, d.home.players.map(p => p.player.name).slice(0, 11));
+            renderPlayers(`away-l-${id}`, d.away.players.map(p => p.player.name).slice(0, 11), true);
+        }
+    }
+}
+
+function renderPlayers(divId, names, reverse = false) {
+    document.getElementById(divId).innerHTML = names.map((n, i) => `
+        <div class="player-item" style="${reverse ? 'flex-direction:row-reverse' : ''}">
+            <span class="p-num">${i + 1}</span> <span>${n}</span>
+        </div>
+    `).join('');
 }
 
 init();

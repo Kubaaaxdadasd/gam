@@ -3,166 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Connect - Pro</title>
+    <title>Football Connect - Dashboard</title>
     <style>
         :root {
-            --bg-dark: #0a0a0a;
-            --card-dark: #161616;
+            --bg-dark: #050505;
+            --card-bg: #111111;
             --sofa-blue: #0047ff;
-            --text-gray: #9ca3af;
-            --accent: #ff0046;
+            --text-gray: #888;
+            --accent-red: #ff2d55;
             --rating-green: #00d24d;
         }
 
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
             margin: 0; 
-            background: linear-gradient(rgba(10, 10, 10, 0.9), rgba(10, 10, 10, 0.9)), 
-                        url('boisko.jpg') no-repeat center center fixed;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('boisko.jpg') no-repeat center center fixed;
             background-size: cover;
             color: white;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
         }
 
-        /* Menu */
+        /* MENU */
         nav { 
             background: var(--sofa-blue); 
-            padding: 0 2rem; 
+            padding: 0 20px; 
             display: flex; 
-            height: 60px;
+            height: 55px; 
             align-items: center; 
             gap: 30px;
             position: sticky; top: 0; z-index: 1000;
         }
-        nav a { color: white; text-decoration: none; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
+        nav a { color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; opacity: 0.8; }
         nav a.active { opacity: 1; border-bottom: 3px solid white; height: 100%; display: flex; align-items: center; }
 
-        /* Układ główny */
-        .main-wrapper {
+        /* UKŁAD TRZYKOLUMNOWY */
+        .main-grid {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-            max-width: 1200px;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 15px;
+            max-width: 1400px;
             margin: 20px auto;
-            width: 100%;
-            padding: 0 10px;
+            padding: 0 15px;
         }
 
-        /* Sidebar - Ranking zawodników */
-        .sidebar { background: rgba(22, 22, 22, 0.95); border-radius: 12px; border: 1px solid #2a2a2a; padding: 15px; align-self: start; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .sidebar-header h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--text-gray); margin: 0; }
-        
-        .league-select { background: #333; color: white; border: none; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        /* LEWA KOLUMNA: RANKING */
+        .sidebar-ranking {
+            background: var(--card-bg);
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 15px;
+            height: fit-content;
+        }
+        .rank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .rank-header h3 { font-size: 0.75rem; color: var(--text-gray); text-transform: uppercase; margin: 0; }
+        .league-select { background: #222; color: white; border: 1px solid #444; font-size: 0.7rem; padding: 3px; border-radius: 4px; }
 
-        .player-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
-        .p-rank { width: 25px; font-size: 0.8rem; color: var(--text-gray); }
-        .p-info { flex: 1; margin-left: 10px; }
+        .player-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+        .p-no { width: 20px; font-size: 0.75rem; color: var(--text-gray); }
+        .p-details { flex: 1; margin-left: 10px; }
         .p-name { font-size: 0.85rem; font-weight: 600; }
-        .p-team { font-size: 0.7rem; color: var(--text-gray); }
-        .p-rating { 
-            background: var(--rating-green); 
-            color: black; 
-            font-weight: 800; 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-size: 0.8rem; 
+        .p-club { font-size: 0.7rem; color: var(--text-gray); }
+        .p-rate { background: var(--rating-green); color: black; font-weight: 800; padding: 4px 6px; border-radius: 4px; font-size: 0.75rem; }
+
+        /* ŚRODEK: SPOTKANIE DNIA + LISTA MECZÓW */
+        .center-content { display: flex; flex-direction: column; gap: 15px; }
+
+        .featured-match {
+            background: rgba(17, 17, 17, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #222;
         }
-
-        /* Content */
-        .content { display: flex; flex-direction: column; gap: 20px; }
-        .featured-match { background: rgba(22, 22, 22, 0.95); border-radius: 12px; padding: 25px; border: 1px solid #2a2a2a; text-align: center; }
-        .f-score-val { font-size: 2.5rem; font-weight: 900; color: var(--sofa-blue); margin: 10px 0; }
+        .f-score { font-size: 2.5rem; font-weight: 800; color: var(--sofa-blue); margin: 5px 0; }
         
-        .league-box { background: rgba(22, 22, 22, 0.9); border-radius: 8px; margin-bottom: 15px; border: 1px solid #222; overflow: hidden; }
-        .league-title { background: #1f1f1f; padding: 10px 15px; font-size: 0.8rem; font-weight: 700; color: var(--text-gray); }
-        .match-row { display: flex; align-items: center; padding: 15px; border-top: 1px solid #1f1f1f; }
-        .m-teams { flex: 1; font-weight: 600; font-size: 0.9rem; }
-        .m-score { font-family: 'Monaco', monospace; font-weight: 700; color: var(--sofa-blue); }
+        /* LISTA MECZÓW (TABELA) */
+        .league-group { background: rgba(17, 17, 17, 0.9); border-radius: 8px; border: 1px solid #222; overflow: hidden; margin-bottom: 10px; }
+        .league-name { background: #1a1a1a; padding: 8px 15px; font-size: 0.75rem; font-weight: 700; color: var(--text-gray); border-bottom: 1px solid #222; }
+        
+        .match-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #1a1a1a; }
+        .m-time { width: 45px; font-size: 0.7rem; color: var(--accent-red); font-weight: 700; }
+        .m-teams { flex: 1; font-size: 0.85rem; font-weight: 500; }
+        .m-score { width: 30px; text-align: right; color: var(--sofa-blue); font-weight: 800; font-family: monospace; }
 
-        @media (max-width: 900px) {
-            .main-wrapper { grid-template-columns: 1fr; }
-            .sidebar { order: 2; }
+        @media (max-width: 1000px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .sidebar-ranking, .right-sidebar { display: none; } /* Chowane na mobile */
         }
     </style>
 </head>
 <body>
 
 <nav>
-    <a href="#">Home</a>
-    <a href="#" class="active">Mecze</a>
-    <a href="#">Wiadomości</a>
+    <a href="index.html">Home</a>
+    <a href="mecze.html" class="active">Mecze</a>
+    <a href="wiadomosci.html">Wiadomości</a>
 </nav>
 
-<div class="main-wrapper">
-    <aside class="sidebar">
-        <div class="sidebar-header">
+<div class="main-grid">
+    <aside class="sidebar-ranking">
+        <div class="rank-header">
             <h3>Top Zawodnicy</h3>
-            <select class="league-select" id="leaguePicker" onchange="updatePlayerRanking()">
+            <select class="league-select" id="lPicker" onchange="loadPlayers()">
+                <option value="pl">Premier League</option>
                 <option value="cl">Champions League</option>
                 <option value="ek">Ekstraklasa</option>
-                <option value="pl">Premier League</option>
             </select>
         </div>
-        <div id="player-list">
-            </div>
+        <div id="player-list"></div>
     </aside>
 
-    <main class="content">
-        <div id="featured-box">
-            <div class="featured-match">
-                <div style="color:var(--sofa-blue); font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">SPOTKANIE DNIA</div>
-                <div class="f-score-val">2 : 1</div>
-                <div style="font-weight: 700;">Real Madrid vs Man City</div>
-            </div>
+    <main class="center-content">
+        <div class="featured-match">
+            <div style="font-size: 0.65rem; color: var(--sofa-blue); font-weight: 800; letter-spacing: 1px;">SPOTKANIE DNIA</div>
+            <div class="f-score">0 : 0</div>
+            <div style="font-size: 0.9rem; font-weight: 700;">Bournemouth vs Man Utd</div>
         </div>
-        <div id="leagues-list"></div>
+
+        <div id="live-matches-container">
+            <div style="text-align: center; color: var(--text-gray); padding: 20px;">Ładowanie tabeli wyników...</div>
+        </div>
     </main>
+
+    <aside class="right-sidebar">
+        <div class="sidebar-ranking" style="border-style: dashed; opacity: 0.5;">
+            <p style="font-size: 0.7rem; text-align: center;">Miejsce na statystyki ligowe</p>
+        </div>
+    </aside>
 </div>
 
 <script>
-// Dane testowe dla zawodników (w prawdziwej wersji pobierane z API)
-const playerStats = {
-    cl: [
-        { name: "Kylian Mbappé", team: "Real Madrid", rating: "8.12" },
-        { name: "Erling Haaland", team: "Man City", rating: "7.95" },
-        { name: "Vinícius Júnior", team: "Real Madrid", rating: "7.88" }
+// DANE DO RANKINGU
+const playersData = {
+    pl: [
+        { n: "Mohamed Salah", c: "Liverpool", r: "8.05" },
+        { n: "Bukayo Saka", c: "Arsenal", r: "7.92" },
+        { n: "Cole Palmer", c: "Chelsea", r: "7.84" }
     ],
     ek: [
-        { name: "Mikael Ishak", team: "Lech Poznań", rating: "7.65" },
-        { name: "Marc Gual", team: "Legia Warszawa", rating: "7.42" },
-        { name: "Ivi López", team: "Raków", rating: "7.38" }
+        { n: "Mikael Ishak", c: "Lech Poznań", r: "7.55" },
+        { n: "Ivi López", c: "Raków", r: "7.40" }
     ],
-    pl: [
-        { name: "Mohamed Salah", team: "Liverpool", rating: "8.05" },
-        { name: "Bukayo Saka", team: "Arsenal", rating: "7.92" },
-        { name: "Cole Palmer", team: "Chelsea", rating: "7.84" }
+    cl: [
+        { n: "Kylian Mbappé", c: "Real Madrid", r: "8.10" },
+        { n: "Erling Haaland", c: "Man City", r: "8.02" }
     ]
 };
 
-function updatePlayerRanking() {
-    const league = document.getElementById('leaguePicker').value;
-    const list = document.getElementById('player-list');
-    const players = playerStats[league];
-
-    list.innerHTML = players.map((p, index) => `
-        <div class="player-row">
-            <div class="p-rank">${index + 1}</div>
-            <div class="p-info">
-                <div class="p-name">${p.name}</div>
-                <div class="p-team">${p.team}</div>
+function loadPlayers() {
+    const val = document.getElementById('lPicker').value;
+    const container = document.getElementById('player-list');
+    container.innerHTML = playersData[val].map((p, i) => `
+        <div class="player-item">
+            <div class="p-no">${i+1}</div>
+            <div class="p-details">
+                <div class="p-name">${p.n}</div>
+                <div class="p-club">${p.c}</div>
             </div>
-            <div class="p-rating">${p.rating}</div>
+            <div class="p-rate">${p.r}</div>
         </div>
     `).join('');
 }
 
-// Inicjalizacja
-updatePlayerRanking();
+// SYMULACJA DANYCH MECZOWYCH (Dla tabeli)
+function loadLiveMatches() {
+    const leagues = [
+        { name: "Ekstraklasa 🇵🇱", matches: [{ h: "Lech Poznań", a: "Legia Warszawa", hs: 2, as: 1, t: "75'" }] },
+        { name: "Premier League 🏴󠁧󠁢󠁥󠁮󠁧󠁿", matches: [{ h: "Arsenal", a: "Chelsea", hs: 0, as: 0, t: "12'" }, { h: "Liverpool", a: "Everton", hs: 3, as: 0, t: "88'" }] },
+        { name: "Bundesliga 🇩🇪", matches: [{ h: "Bayern", a: "Dortmund", hs: 1, as: 1, t: "44'" }] }
+    ];
 
-// Tutaj Twoja funkcja fetch z poprzedniego kroku do ładowania meczów na żywo...
+    const container = document.getElementById('live-matches-container');
+    container.innerHTML = leagues.map(l => `
+        <div class="league-group">
+            <div class="league-name">${l.name}</div>
+            ${l.matches.map(m => `
+                <div class="match-row">
+                    <div class="m-time">${m.t}</div>
+                    <div class="m-teams">
+                        <div>${m.h}</div>
+                        <div>${m.a}</div>
+                    </div>
+                    <div class="m-score">
+                        <div>${m.hs}</div>
+                        <div>${m.as}</div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+// Start
+loadPlayers();
+loadLiveMatches();
 </script>
+
 </body>
 </html>

@@ -58,33 +58,54 @@ const HOST = 'sportapi7.p.rapidapi.com';
 function injectStyles() {
     const style = document.createElement('style');
     style.innerHTML = `
-        .match-card { background: #141414; border: 1px solid #333; border-radius: 12px; margin: 20px auto; max-width: 900px; color: white; font-family: sans-serif; overflow: hidden; }
-        .match-info { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #1a1a1a; }
-        .pitch { 
+        .match-card { background: #111; border: 1px solid #333; border-radius: 12px; margin: 20px auto; max-width: 950px; color: white; font-family: sans-serif; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .match-info { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #1a1a1a; transition: 0.3s; }
+        .match-info:hover { background: #222; }
+        .pitch-container { 
+            position: relative;
             background: url('boisko.jpg') no-repeat center; 
             background-size: 100% 100%; 
             aspect-ratio: 16/9; 
-            display: flex; 
             border-top: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10%; /* Osuwa składy od bramek do środka */
         }
-        /* Kluczowa zmiana: dodajemy szeroki padding, żeby odsunąć tekst od bramek */
-        .half { 
-            flex: 1; 
-            padding: 40px 60px; 
-            background: rgba(0,0,0,0.4); 
+        .team-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 200px;
+            z-index: 2;
+        }
+        .player-row { 
             display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 14px; 
+            font-weight: 500;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
-        .player-item { display: flex; gap: 10px; font-size: 13px; margin: 6px 0; text-shadow: 1px 1px 2px black; }
-        .p-num { color: #0047ff; font-weight: bold; width: 25px; text-align: center; background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .p-number { 
+            color: #0047ff; 
+            background: rgba(0, 71, 255, 0.1); 
+            border: 1px solid #0047ff;
+            border-radius: 4px;
+            width: 24px; 
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 11px;
+        }
     `;
     document.head.appendChild(style);
 }
 
 async function init() {
     injectStyles();
-    const main = document.getElementById('matches-col') || document.body;
+    const container = document.getElementById('matches-col') || document.body;
     
     try {
         const res = await fetch(`https://${HOST}/api/v1/sport/football/events/live`, {
@@ -95,8 +116,8 @@ async function init() {
 
         if (matches.length === 0) {
             matches = [{
-                id: "test_1",
-                tournament: { name: "PREMIER LEAGUE (TRYB TESTOWY)" },
+                id: "demo_id",
+                tournament: { name: "PREMIER LEAGUE (MECZ TESTOWY)" },
                 homeTeam: { name: "Bournemouth" },
                 awayTeam: { name: "Man Utd" },
                 homeScore: { current: 1 },
@@ -104,42 +125,47 @@ async function init() {
             }];
         }
         
-        main.innerHTML = matches.map(m => `
+        container.innerHTML = matches.map(m => `
             <div class="match-card">
-                <div style="padding: 10px; font-size: 11px; color: #888; text-align: center;">${m.tournament.name}</div>
-                <div class="match-info" onclick="togglePitch('${m.id}')">
-                    <span style="flex:1; font-weight:bold;">${m.homeTeam.name}</span>
-                    <span style="color:#0047ff; font-weight:900; font-size:24px; min-width:80px; text-align:center;">${m.homeScore.current} - ${m.awayScore.current}</span>
-                    <span style="flex:1; text-align:right; font-weight:bold;">${m.awayTeam.name}</span>
+                <div style="padding: 10px; font-size: 11px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px;">${m.tournament.name}</div>
+                <div class="match-info" onclick="document.getElementById('p-${m.id}').style.display = (document.getElementById('p-${m.id}').style.display === 'none' ? 'flex' : 'none')">
+                    <span style="flex:1; font-size: 18px;">${m.homeTeam.name}</span>
+                    <span style="color:#0047ff; font-weight:900; font-size:28px; margin: 0 20px;">${m.homeScore.current} - ${m.awayScore.current}</span>
+                    <span style="flex:1; text-align:right; font-size: 18px;">${m.awayTeam.name}</span>
                 </div>
-                <div id="p-box-${m.id}" style="display:none;">
-                    <div class="pitch">
-                        <div id="home-l-${m.id}" class="half"></div>
-                        <div id="away-l-${m.id}" class="half" style="text-align:right"></div>
-                    </div>
+                <div id="p-${m.id}" class="pitch-container" style="display:none;">
+                    <div id="home-players-${m.id}" class="team-list"></div>
+                    <div id="away-players-${m.id}" class="team-list" style="text-align:right;"></div>
                 </div>
             </div>
         `).join('');
-    } catch (e) { main.innerHTML = "Błąd API."; }
+    } catch (e) { container.innerHTML = "<div style='color:white;text-align:center;'>Błąd API</div>"; }
 }
 
-async function togglePitch(id) {
-    const box = document.getElementById(`p-box-${id}`);
-    box.style.display = box.style.display === "none" ? "block" : "none";
-
-    if (id === "test_1") {
-        renderPlayers(`home-l-${id}`, ["Neto", "Smith", "Cook", "Solanke", "Tavernier", "Kluivert"]);
-        renderPlayers(`away-l-${id}`, ["Onana", "Dalot", "Mainoo", "Fernandes", "Rashford", "Hojlund"], true);
-    }
-}
-
-function renderPlayers(divId, names, reverse = false) {
-    document.getElementById(divId).innerHTML = names.map((n, i) => `
-        <div class="player-item" style="${reverse ? 'flex-direction:row-reverse' : ''}">
-            <span class="p-num">${i + 1}</span> <span>${n}</span>
+function renderLineup(containerId, players, isAway = false) {
+    const box = document.getElementById(containerId);
+    box.innerHTML = players.map((p, i) => `
+        <div class="player-row" style="${isAway ? 'flex-direction: row-reverse' : ''}">
+            <div class="p-number">${i+1}</div>
+            <span>${p}</span>
         </div>
     `).join('');
 }
+
+// Funkcja wywoływana przy kliknięciu (w demo używa statycznych danych)
+window.togglePitch = (id) => {
+    if (id === "demo_id") {
+        renderLineup(`home-players-${id}`, ["Neto", "Zabarnyi", "Cook", "Solanke", "Kluivert"]);
+        renderLineup(`away-players-${id}`, ["Onana", "Maguire", "Mainoo", "Fernandes", "Hojlund"], true);
+    }
+};
+
+// Dodajemy obsługę kliknięcia dla demo
+document.addEventListener('click', (e) => {
+    if(e.target.closest('.match-info')) {
+        window.togglePitch("demo_id");
+    }
+});
 
 init();
 </script>

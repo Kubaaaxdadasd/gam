@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Connect - Mecze</title>
+    <title>Football Connect - Pro</title>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -11,159 +11,158 @@
             --sofa-blue: #0047ff;
             --text-gray: #9ca3af;
             --accent: #ff0046;
+            --rating-green: #00d24d;
         }
 
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
-            background-color: var(--bg-dark);
-            color: white;
-            /* Tło z pliku boisko.jpg z przyciemnieniem dla czytelności */
-            background: linear-gradient(rgba(10, 10, 10, 0.85), rgba(10, 10, 10, 0.85)), 
+            background: linear-gradient(rgba(10, 10, 10, 0.9), rgba(10, 10, 10, 0.9)), 
                         url('boisko.jpg') no-repeat center center fixed;
             background-size: cover;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        /* Nowe Menu: Home, Wiadomości */
+        /* Menu */
         nav { 
             background: var(--sofa-blue); 
-            padding: 0 1rem; 
+            padding: 0 2rem; 
             display: flex; 
-            height: 50px;
+            height: 60px;
             align-items: center; 
-            gap: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            gap: 30px;
             position: sticky; top: 0; z-index: 1000;
         }
-        nav a { color: white; text-decoration: none; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
-        nav a:hover { opacity: 1; }
+        nav a { color: white; text-decoration: none; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
         nav a.active { opacity: 1; border-bottom: 3px solid white; height: 100%; display: flex; align-items: center; }
 
-        .container { max-width: 650px; margin: 0 auto; padding: 20px 10px; }
-
-        /* Spotkanie Dnia - Styl ze zdjęcia */
-        .featured-match {
-            background: rgba(22, 22, 22, 0.95);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            text-align: center;
-            border: 1px solid #2a2a2a;
+        /* Układ główny */
+        .main-wrapper {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            width: 100%;
+            padding: 0 10px;
         }
-        .featured-label { color: var(--sofa-blue); font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 15px; text-transform: uppercase; }
-        .featured-content { display: flex; justify-content: space-between; align-items: center; }
-        .f-team { flex: 1; font-size: 1.2rem; font-weight: 700; }
-        .f-score { flex: 0 0 100px; }
-        .f-score-val { font-size: 2rem; font-weight: 800; color: var(--sofa-blue); }
-        .f-status { color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-top: 5px; }
 
-        /* Grupowanie Lig */
-        .league-box { background: rgba(22, 22, 22, 0.9); border-radius: 8px; margin-bottom: 15px; overflow: hidden; border: 1px solid #222; }
-        .league-header { background: #1f1f1f; padding: 10px 15px; font-size: 0.8rem; font-weight: 700; color: var(--text-gray); border-bottom: 1px solid #2a2a2a; }
+        /* Sidebar - Ranking zawodników */
+        .sidebar { background: rgba(22, 22, 22, 0.95); border-radius: 12px; border: 1px solid #2a2a2a; padding: 15px; align-self: start; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .sidebar-header h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--text-gray); margin: 0; }
         
-        .match-row { 
-            display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #1f1f1f; 
-            cursor: pointer; transition: 0.2s;
-        }
-        .match-row:hover { background: #1c1c1c; }
-        .m-info { flex: 0 0 50px; font-size: 0.7rem; color: var(--text-gray); }
-        .m-teams { flex: 1; font-size: 0.9rem; font-weight: 500; line-height: 1.4; }
-        .m-scores { flex: 0 0 30px; text-align: right; font-weight: 700; font-size: 1rem; color: var(--sofa-blue); }
+        .league-select { background: #333; color: white; border: none; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
 
-        .live-dot { color: var(--accent); font-weight: 800; }
+        .player-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
+        .p-rank { width: 25px; font-size: 0.8rem; color: var(--text-gray); }
+        .p-info { flex: 1; margin-left: 10px; }
+        .p-name { font-size: 0.85rem; font-weight: 600; }
+        .p-team { font-size: 0.7rem; color: var(--text-gray); }
+        .p-rating { 
+            background: var(--rating-green); 
+            color: black; 
+            font-weight: 800; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+        }
+
+        /* Content */
+        .content { display: flex; flex-direction: column; gap: 20px; }
+        .featured-match { background: rgba(22, 22, 22, 0.95); border-radius: 12px; padding: 25px; border: 1px solid #2a2a2a; text-align: center; }
+        .f-score-val { font-size: 2.5rem; font-weight: 900; color: var(--sofa-blue); margin: 10px 0; }
+        
+        .league-box { background: rgba(22, 22, 22, 0.9); border-radius: 8px; margin-bottom: 15px; border: 1px solid #222; overflow: hidden; }
+        .league-title { background: #1f1f1f; padding: 10px 15px; font-size: 0.8rem; font-weight: 700; color: var(--text-gray); }
+        .match-row { display: flex; align-items: center; padding: 15px; border-top: 1px solid #1f1f1f; }
+        .m-teams { flex: 1; font-weight: 600; font-size: 0.9rem; }
+        .m-score { font-family: 'Monaco', monospace; font-weight: 700; color: var(--sofa-blue); }
+
+        @media (max-width: 900px) {
+            .main-wrapper { grid-template-columns: 1fr; }
+            .sidebar { order: 2; }
+        }
     </style>
 </head>
 <body>
 
 <nav>
-    <a href="index.html">Home</a>
-    <a href="mecze.html" class="active">Mecze</a>
-    <a href="wiadomosci.html">Wiadomości</a>
+    <a href="#">Home</a>
+    <a href="#" class="active">Mecze</a>
+    <a href="#">Wiadomości</a>
 </nav>
 
-<div class="container">
-    <div id="featured-box"></div>
-    <div id="leagues-list">Ładowanie danych...</div>
+<div class="main-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Top Zawodnicy</h3>
+            <select class="league-select" id="leaguePicker" onchange="updatePlayerRanking()">
+                <option value="cl">Champions League</option>
+                <option value="ek">Ekstraklasa</option>
+                <option value="pl">Premier League</option>
+            </select>
+        </div>
+        <div id="player-list">
+            </div>
+    </aside>
+
+    <main class="content">
+        <div id="featured-box">
+            <div class="featured-match">
+                <div style="color:var(--sofa-blue); font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">SPOTKANIE DNIA</div>
+                <div class="f-score-val">2 : 1</div>
+                <div style="font-weight: 700;">Real Madrid vs Man City</div>
+            </div>
+        </div>
+        <div id="leagues-list"></div>
+    </main>
 </div>
 
 <script>
-const API_KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
-const API_HOST = 'sportapi7.p.rapidapi.com';
+// Dane testowe dla zawodników (w prawdziwej wersji pobierane z API)
+const playerStats = {
+    cl: [
+        { name: "Kylian Mbappé", team: "Real Madrid", rating: "8.12" },
+        { name: "Erling Haaland", team: "Man City", rating: "7.95" },
+        { name: "Vinícius Júnior", team: "Real Madrid", rating: "7.88" }
+    ],
+    ek: [
+        { name: "Mikael Ishak", team: "Lech Poznań", rating: "7.65" },
+        { name: "Marc Gual", team: "Legia Warszawa", rating: "7.42" },
+        { name: "Ivi López", team: "Raków", rating: "7.38" }
+    ],
+    pl: [
+        { name: "Mohamed Salah", team: "Liverpool", rating: "8.05" },
+        { name: "Bukayo Saka", team: "Arsenal", rating: "7.92" },
+        { name: "Cole Palmer", team: "Chelsea", rating: "7.84" }
+    ]
+};
 
-// ID lig do sortowania (Ekstraklasa pierwsza)
-const PRIORITY_LEAGUES = [344, 17, 8, 23, 35, 4]; 
+function updatePlayerRanking() {
+    const league = document.getElementById('leaguePicker').value;
+    const list = document.getElementById('player-list');
+    const players = playerStats[league];
 
-async function getLiveMatches() {
-    try {
-        const res = await fetch(`https://${API_HOST}/api/v1/sport/football/events/live`, {
-            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
-        });
-        const data = await res.json();
-        renderDashboard(data.events);
-    } catch (e) {
-        document.getElementById('leagues-list').innerHTML = "Błąd połączenia z API.";
-    }
-}
-
-function renderDashboard(events) {
-    if (!events || events.length === 0) {
-        document.getElementById('leagues-list').innerHTML = "Brak meczów na żywo.";
-        return;
-    }
-
-    // 1. Spotkanie Dnia (Bierzemy pierwszy mecz z listy PRIORITY)
-    const featured = events.find(e => PRIORITY_LEAGUES.includes(e.tournament.uniqueTournament?.id)) || events[0];
-    document.getElementById('featured-box').innerHTML = `
-        <div class="featured-match">
-            <div class="featured-label">Spotkanie Dnia</div>
-            <div class="featured-content">
-                <div class="f-team">${featured.homeTeam.shortName}</div>
-                <div class="f-score">
-                    <div class="f-score-val">${featured.homeScore.current} : ${featured.awayScore.current}</div>
-                    <div class="f-status">${featured.status.description}</div>
-                </div>
-                <div class="f-team">${featured.awayTeam.shortName}</div>
+    list.innerHTML = players.map((p, index) => `
+        <div class="player-row">
+            <div class="p-rank">${index + 1}</div>
+            <div class="p-info">
+                <div class="p-name">${p.name}</div>
+                <div class="p-team">${p.team}</div>
             </div>
-        </div>
-    `;
-
-    // 2. Grupowanie i Sortowanie
-    const groups = {};
-    events.forEach(ev => {
-        const lName = ev.tournament.name;
-        if (!groups[lName]) groups[lName] = { id: ev.tournament.uniqueTournament?.id, matches: [] };
-        groups[lName].matches.push(ev);
-    });
-
-    const sortedLeagueNames = Object.keys(groups).sort((a, b) => {
-        const posA = PRIORITY_LEAGUES.indexOf(groups[a].id) === -1 ? 999 : PRIORITY_LEAGUES.indexOf(groups[a].id);
-        const posB = PRIORITY_LEAGUES.indexOf(groups[b].id) === -1 ? 999 : PRIORITY_LEAGUES.indexOf(groups[b].id);
-        return posA - posB;
-    });
-
-    const listHtml = sortedLeagueNames.map(name => `
-        <div class="league-box">
-            <div class="league-header">${name}</div>
-            ${groups[name].matches.map(m => `
-                <div class="match-row">
-                    <div class="m-info"><span class="live-dot">LIVE</span></div>
-                    <div class="m-teams">
-                        <div>${m.homeTeam.name}</div>
-                        <div>${m.awayTeam.name}</div>
-                    </div>
-                    <div class="m-scores">
-                        <div>${m.homeScore.current}</div>
-                        <div>${m.awayScore.current}</div>
-                    </div>
-                </div>
-            `).join('')}
+            <div class="p-rating">${p.rating}</div>
         </div>
     `).join('');
-
-    document.getElementById('leagues-list').innerHTML = listHtml;
 }
 
-getLiveMatches();
+// Inicjalizacja
+updatePlayerRanking();
+
+// Tutaj Twoja funkcja fetch z poprzedniego kroku do ładowania meczów na żywo...
 </script>
 </body>
 </html>

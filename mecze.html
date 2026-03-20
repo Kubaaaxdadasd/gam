@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Connect PRO - Live</title>
+    <title>Football Connect Live</title>
     <style>
         :root {
             --bg-dark: #050505;
@@ -21,173 +21,234 @@
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('boisko.jpg') no-repeat center center fixed;
             background-size: cover;
             color: white;
+            min-height: 100vh;
         }
 
-        /* --- LAYOUT --- */
+        /* LAYOUT */
+        nav { background: var(--sofa-blue); padding: 0 20px; display: flex; height: 55px; align-items: center; gap: 30px; position: sticky; top: 0; z-index: 1000; }
+        nav a { color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
         .main-grid {
             display: grid;
-            grid-template-columns: 320px 1fr 320px;
-            gap: 20px;
-            max-width: 1600px;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 15px;
+            max-width: 1500px;
             margin: 20px auto;
-            padding: 0 20px;
+            padding: 0 15px;
+            align-items: start;
         }
 
-        .sidebar-panel { background: var(--card-bg); border: var(--border); border-radius: 12px; padding: 15px; height: fit-content; }
-
-        /* --- MECZE I ROZWIJANIE --- */
-        .match-card { background: var(--card-bg); border-radius: 12px; border: var(--border); margin-bottom: 10px; overflow: hidden; }
-        .league-title { background: #1a1a1a; padding: 10px 15px; font-size: 0.75rem; font-weight: 800; color: var(--text-gray); }
-        
-        .match-row { 
-            display: flex; align-items: center; padding: 15px; cursor: pointer; transition: 0.2s;
+        /* PANELE BOCZNE - DŁUGIE */
+        .sidebar-panel { 
+            background: var(--card-bg); 
+            border: var(--border); 
+            border-radius: 12px; 
+            padding: 15px; 
+            min-height: 85vh; 
         }
-        .match-row:hover { background: rgba(255,255,255,0.05); }
+        .sidebar-panel h3 { font-size: 0.75rem; color: var(--sofa-blue); text-transform: uppercase; border-bottom: var(--border); padding-bottom: 10px; margin-top: 0; }
+
+        /* LISTY BOCZNE */
+        .side-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .side-rank { width: 20px; font-size: 0.7rem; color: var(--text-gray); }
+        .side-info { flex: 1; margin-left: 10px; }
+        .side-name { font-size: 0.8rem; font-weight: 600; display: block; }
+        .side-sub { font-size: 0.65rem; color: var(--text-gray); }
+        .side-val { font-size: 0.75rem; font-weight: 800; padding: 3px 6px; border-radius: 4px; }
+        .val-rate { background: var(--rating-green); color: black; }
+        .val-goal { background: #333; color: white; }
+
+        /* KARTY MECZOWE */
+        .league-card { background: var(--card-bg); border-radius: 12px; border: var(--border); margin-bottom: 15px; overflow: hidden; }
+        .league-header { background: rgba(255,255,255,0.05); padding: 8px 15px; font-size: 0.7rem; font-weight: 800; color: var(--text-gray); }
         
+        .match-row { display: flex; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .m-time { width: 40px; color: var(--accent-red); font-size: 0.7rem; font-weight: 800; }
         .m-teams { flex: 1; font-size: 0.9rem; font-weight: 600; }
-        .m-score { width: 40px; text-align: right; color: var(--sofa-blue); font-weight: 800; font-size: 1.1rem; }
+        .m-score { font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 800; color: var(--sofa-blue); }
 
-        /* --- PANEL SZCZEGÓŁÓW (UKRYTY DOMYŚLNIE) --- */
-        .match-details { 
-            display: none; 
-            background: #0d0d0d; 
-            border-top: 1px solid #222; 
-            padding: 20px;
-        }
+        /* MATCH CENTER (ROZWIJANE) */
+        .match-details { display: none; background: #0a0a0a; border-top: 1px solid #222; padding: 15px; }
         .match-details.active { display: block; }
-
-        .tabs { display: flex; gap: 10px; border-bottom: 1px solid #222; margin-bottom: 15px; }
-        .tab { 
-            padding: 8px 12px; font-size: 0.7rem; cursor: pointer; color: var(--text-gray); 
-            text-transform: uppercase; font-weight: 700; 
-        }
+        
+        .tabs { display: flex; gap: 15px; border-bottom: 1px solid #222; margin-bottom: 15px; }
+        .tab { padding: 8px 0; font-size: 0.7rem; font-weight: 800; color: var(--text-gray); cursor: pointer; text-transform: uppercase; }
         .tab.active { color: var(--sofa-blue); border-bottom: 2px solid var(--sofa-blue); }
 
-        /* --- CONTENT W TABACH --- */
-        .tab-content { font-size: 0.8rem; }
-        .event-line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .event-icon { width: 15px; height: 15px; border-radius: 3px; }
-        
-        /* Mini boisko w składach */
-        .mini-pitch { 
+        .detail-content { font-size: 0.8rem; }
+        .pitch-view { 
             background: url('boisko.jpg') no-repeat center; 
-            background-size: cover; height: 200px; border-radius: 8px; 
-            position: relative; margin-top: 10px; opacity: 0.8;
+            background-size: cover; height: 180px; border-radius: 8px; 
+            position: relative; margin: 10px 0; border: 1px solid #333;
         }
 
-        .stat-bar-container { margin-bottom: 10px; }
-        .stat-label { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 4px; }
-        .stat-bar { height: 6px; background: #222; border-radius: 3px; overflow: hidden; display: flex; }
-        .bar-home { background: var(--sofa-blue); height: 100%; }
-        .bar-away { background: white; height: 100%; }
-
-        @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } .sidebar-panel { display: none; } }
+        /* RESPONSYWNOŚĆ */
+        @media (max-width: 1100px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .sidebar-panel { display: none; }
+        }
     </style>
 </head>
 <body>
 
+<nav>
+    <a href="#">HOME</a>
+    <a href="#" style="border-bottom: 2px solid white;">MECZE</a>
+    <a href="#">WIADOMOŚCI</a>
+</nav>
+
 <div class="main-grid">
     <aside class="sidebar-panel">
-        <h4 style="font-size: 0.7rem; color: var(--text-gray);">TOP OCENY</h4>
-        <div id="ratings"></div>
+        <h3>Top Oceny</h3>
+        <select id="ratingSelect" style="width:100%; margin-bottom:15px;" onchange="renderLeftPanel()">
+            <option value="cl">Champions League</option>
+            <option value="pl">Premier League</option>
+            <option value="ek">Ekstraklasa</option>
+        </select>
+        <div id="left-list"></div>
     </aside>
 
-    <main id="match-list">
-        </main>
+    <main>
+        <div id="live-matches">Ładowanie wyników na żywo...</div>
+    </main>
 
     <aside class="sidebar-panel">
-        <h4 style="font-size: 0.7rem; color: var(--text-gray);">TOP STRZELCY</h4>
-        <div id="scorers"></div>
+        <h3>Top Strzelcy</h3>
+        <div id="right-list"></div>
     </aside>
 </div>
 
 <script>
-// Przykładowe dane meczu do rozwinięcia
-const matches = [
-    { id: 1, league: "Premier League", home: "Bournemouth", away: "Man Utd", score: "1:2", time: "72'" },
-    { id: 2, league: "Ekstraklasa", home: "Lech Poznań", away: "Legia Warszawa", score: "0:0", time: "15'" }
-];
+const API_KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
+const API_HOST = 'sportapi7.p.rapidapi.com';
 
-function renderMatches() {
-    const container = document.getElementById('match-list');
-    container.innerHTML = matches.map(m => `
-        <div class="match-card">
-            <div class="league-title">${m.league}</div>
-            <div class="match-row" onclick="toggleDetails(${m.id})">
-                <div class="m-time">${m.time}</div>
-                <div class="m-teams">
-                    <div>${m.home}</div>
-                    <div>${m.away}</div>
+// FUNKCJA POBIERANIA MECZÓW LIVE
+async function fetchLive() {
+    try {
+        const res = await fetch(`https://${API_HOST}/api/v1/sport/football/events/live`, {
+            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
+        });
+        const data = await res.json();
+        renderLiveContent(data.events || []);
+    } catch (e) {
+        document.getElementById('live-matches').innerHTML = "Błąd API. Sprawdź klucz lub limity.";
+    }
+}
+
+function renderLiveContent(events) {
+    const container = document.getElementById('live-matches');
+    if(events.length === 0) {
+        container.innerHTML = "<div class='league-card' style='padding:20px; text-align:center;'>Brak meczów na żywo.</div>";
+        return;
+    }
+
+    const leagues = {};
+    events.forEach(ev => {
+        const lName = ev.tournament.name;
+        if(!leagues[lName]) leagues[lName] = [];
+        leagues[lName].push(ev);
+    });
+
+    container.innerHTML = Object.keys(leagues).map(lName => `
+        <div class="league-card">
+            <div class="league-header">${lName}</div>
+            ${leagues[lName].map(m => `
+                <div class="match-row" onclick="toggleMatch(${m.id})">
+                    <div class="m-time">LIVE</div>
+                    <div class="m-teams">
+                        <div>${m.homeTeam.name}</div>
+                        <div>${m.awayTeam.name}</div>
+                    </div>
+                    <div class="m-score">${m.homeScore.current} - ${m.awayScore.current}</div>
                 </div>
-                <div class="m-score">${m.score}</div>
-            </div>
-            
-            <div id="details-${m.id}" class="match-details">
-                <div class="tabs">
-                    <div class="tab active" onclick="switchTab(event, ${m.id}, 'info')">Szczegóły</div>
-                    <div class="tab" onclick="switchTab(event, ${m.id}, 'lineups')">Składy</div>
-                    <div class="tab" onclick="switchTab(event, ${m.id}, 'stats')">Statystyki</div>
+                <div id="details-${m.id}" class="match-details">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab(event, ${m.id}, 'info')">Szczegóły</div>
+                        <div class="tab" onclick="switchTab(event, ${m.id}, 'lineup')">Składy</div>
+                        <div class="tab" onclick="switchTab(event, ${m.id}, 'stats')">Statystyki</div>
+                    </div>
+                    <div id="content-${m.id}" class="detail-content">
+                        Pobieranie szczegółów...
+                    </div>
                 </div>
-                
-                <div id="content-${m.id}" class="tab-content">
-                    <div class="event-line">⚽ <b>24'</b> Marcus Rashford (Asysta: Bruno)</div>
-                    <div class="event-line">⚽ <b>55'</b> Justin Kluivert (Karny)</div>
-                    <div class="event-line">🟨 <b>62'</b> Lisandro Martinez</div>
-                </div>
-            </div>
+            `).join('')}
         </div>
     `).join('');
 }
 
-function toggleDetails(id) {
+// MECHANIZM ROZWIJANIA I ZAKŁADEK
+function toggleMatch(id) {
     const el = document.getElementById(`details-${id}`);
-    const isVisible = el.style.display === 'block';
-    // Zamknij inne jeśli chcesz styl SofaScore (opcjonalnie)
-    el.style.display = isVisible ? 'none' : 'block';
-}
-
-function switchTab(event, id, type) {
-    event.stopPropagation(); // Żeby nie zamknęło okna przy kliku w tab
-    const content = document.getElementById(`content-${id}`);
-    
-    // Zmiana aktywnego taba
-    const tabs = event.target.parentElement.querySelectorAll('.tab');
-    tabs.forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-
-    if(type === 'info') {
-        content.innerHTML = `
-            <div class="event-line">⚽ <b>24'</b> Marcus Rashford</div>
-            <div class="event-line">⚽ <b>55'</b> Justin Kluivert</div>
-        `;
-    } else if(type === 'lineups') {
-        content.innerHTML = `
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <span>4-2-3-1</span><span>4-3-3</span>
-            </div>
-            <div class="mini-pitch">
-                <div style="position:absolute; top:80px; left:20px; background:red; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>
-                <div style="position:absolute; top:80px; right:20px; background:blue; width:12px; height:12px; border-radius:50%; border:2px solid white;"></div>
-            </div>
-            <p style="text-align:center; font-size:0.6rem; color:gray; margin-top:5px;">Kliknij boisko, aby zobaczyć pełną analizę</p>
-        `;
-    } else if(type === 'stats') {
-        content.innerHTML = `
-            <div class="stat-bar-container">
-                <div class="stat-label"><span>Posiadanie piłki</span><span>45% - 55%</span></div>
-                <div class="stat-bar"><div class="bar-home" style="width:45%"></div><div class="bar-away" style="width:55%"></div></div>
-            </div>
-            <div class="stat-bar-container">
-                <div class="stat-label"><span>Strzały celne</span><span>3 - 6</span></div>
-                <div class="stat-bar"><div class="bar-home" style="width:33%"></div><div class="bar-away" style="width:66%"></div></div>
-            </div>
-        `;
+    const isActive = el.classList.contains('active');
+    document.querySelectorAll('.match-details').forEach(d => d.classList.remove('active'));
+    if(!isActive) {
+        el.classList.add('active');
+        loadTabContent(id, 'info');
     }
 }
 
-// Inicjalizacja
-renderMatches();
+function loadTabContent(id, tab) {
+    const content = document.getElementById(`content-${id}`);
+    if(tab === 'info') {
+        content.innerHTML = `
+            <div style="display:flex; justify-content:space-between;">
+                <div>⚽ 22' Strzelec<br><span style="color:gray; font-size:0.6rem;">Asysta: Zawodnik</span></div>
+                <div style="text-align:right;">🟨 40' Zawodnik</div>
+            </div>`;
+    } else if(tab === 'lineup') {
+        content.innerHTML = `<div class="pitch-view"></div><center style="font-size:0.6rem;">Wybierz zawodnika, by zobaczyć statystyki</center>`;
+    } else if(tab === 'stats') {
+        content.innerHTML = `Posiadanie: 50% - 50%<br>Strzały: 4 - 2<br>Rzuty rożne: 1 - 5`;
+    }
+}
+
+function switchTab(e, id, tab) {
+    e.stopPropagation();
+    const parent = e.target.parentElement;
+    parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    loadTabContent(id, tab);
+}
+
+// PANELE BOCZNE - DANE
+function renderLeftPanel() {
+    const players = [
+        {n: "Robert Lewandowski", c: "FC Barcelona", v: "8.2"},
+        {n: "Lamine Yamal", c: "FC Barcelona", v: "7.9"},
+        {n: "Raphinha", c: "FC Barcelona", v: "7.8"},
+        {n: "Pedri", c: "FC Barcelona", v: "7.5"},
+        {n: "Iñigo Martínez", c: "FC Barcelona", v: "7.4"}
+    ];
+    document.getElementById('left-list').innerHTML = players.map((p, i) => `
+        <div class="side-item">
+            <div class="side-rank">${i+1}</div>
+            <div class="side-info"><span class="side-name">${p.n}</span><span class="side-sub">${p.c}</span></div>
+            <div class="side-val val-rate">${p.v}</div>
+        </div>
+    `).join('');
+}
+
+function renderRightPanel() {
+    const scorers = [
+        {n: "Erling Haaland", c: "Man City", v: "18"},
+        {n: "Harry Kane", c: "Bayern", v: "15"},
+        {n: "M. Salah", c: "Liverpool", v: "14"},
+        {n: "K. Mbappé", c: "Real Madrid", v: "12"}
+    ];
+    document.getElementById('right-list').innerHTML = scorers.map((p, i) => `
+        <div class="side-item">
+            <div class="side-rank">${i+1}</div>
+            <div class="side-info"><span class="side-name">${p.n}</span><span class="side-sub">${p.c}</span></div>
+            <div class="side-val val-goal">${p.v}</div>
+        </div>
+    `).join('');
+}
+
+// START
+fetchLive();
+renderLeftPanel();
+renderRightPanel();
+setInterval(fetchLive, 60000);
 </script>
 </body>
 </html>

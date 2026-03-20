@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Connect - Logowanie</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+    background-color: #0f172a; /* Ciemny granat/czerń */
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-box {
+    background: #1e293b;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    text-align: center;
+    width: 350px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    background: #334155;
+    color: white;
+}
+
+.btn-main {
+    width: 100%;
+    padding: 12px;
+    background: #22c55e; /* Zielony "piłkarski" */
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-google {
+    width: 100%;
+    padding: 12px;
+    background: white;
+    color: black;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+.divider {
+    margin: 20px 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+.switch {
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+.switch a {
+    color: #22c55e;
+    text-decoration: none;
+    font-weight: bold;
+}
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h1>Piłkarski Portal</h1>
+            <p>Dołącz do dyskusji o transferach</p>
+            
+            <form id="login-form">
+                <input type="email" id="email" placeholder="E-mail" required>
+                <input type="password" id="password" placeholder="Hasło" required>
+                <button type="submit" class="btn-main">Zaloguj się</button>
+            </form>
+
+            <div class="divider">lub</div>
+            
+            <button class="btn-google">Kontynuuj z Google</button>
+            
+            <p class="switch">Nie masz konta? <a href="#">Zarejestruj się</a></p>
+        </div>
+    </div>
+
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  // Twoja konfiguracja z Firebase (ta sama co wcześniej)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC0NGpFKoH7jru7Uz_1PDT_6Oj7XY7m0IQ",
+    authDomain: "footballportal-c05b3.firebaseapp.com",
+    projectId: "footballportal-c05b3",
+    storageBucket: "footballportal-c05b3.firebasestorage.app",
+    messagingSenderId: "445132841755",
+    appId: "1:445132841755:web:fee5c072ba2c3f8355a9be"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // LOGOWANIE E-MAIL / HASŁO
+  const loginForm = document.getElementById('login-form');
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        alert("Zalogowano pomyślnie!");
+        window.location.href = "index.html"; // Przekierowanie po logowaniu
+      })
+      .catch((error) => alert("Błąd: " + error.message));
+  });
+
+  // LOGOWANIE GOOGLE
+  const googleBtn = document.querySelector('.btn-google');
+  googleBtn.onclick = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then(() => window.location.href = "index.html")
+      .catch((error) => alert("Błąd Google: " + error.message));
+  };
+</script>
+</body>
+</html>

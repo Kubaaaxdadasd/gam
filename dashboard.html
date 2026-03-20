@@ -38,6 +38,14 @@
 </div>
 
 <script type="module">
+// Dodajemy ten przedrostek przed adresem API:
+const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+const targetUrl = 'https://api.football-data.org/v4/matches';
+
+const response = await fetch(proxyUrl + targetUrl, {
+    headers: { 'X-Auth-Token': MY_TOKEN }
+});
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";

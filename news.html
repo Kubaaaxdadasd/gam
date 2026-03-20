@@ -32,64 +32,69 @@
 </div>
 
 <script>
-    async function zaladujMecze() {
-        // TWÓJ KLUCZ:
-        const MY_TOKEN = 'f74f5a062c754c81866359ee05090ff3'; 
-        const container = document.getElementById('football-news');
-        
-        // ADRES PROXY + ADRES API (Kluczowe, żeby działało!)
-        const url = 'https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/matches';
+async function zaladujMecze() {
+    const MY_TOKEN = 'f74f5a062c754c81866359ee05090ff3'; // Twój klucz
+    const mainContainer = document.getElementById('football-news');
+    const url = 'https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/matches';
 
-        try {
-            const response = await fetch(url, {
-                headers: { 'X-Auth-Token': MY_TOKEN }
-            });
-            const data = await response.json();
+    // Kody lig TOP 5 dostępne w Twoim planie
+    const topLeagues = ['PL', 'PD', 'BL1', 'SA', 'FL1'];
 
-            if (!data.matches || data.matches.length === 0) {
-                container.innerHTML = '<p style="text-align:center;">Brak meczów na dzisiaj.</p>';
-                return;
-            }
+    try {
+        const response = await fetch(url, { headers: { 'X-Auth-Token': MY_TOKEN } });
+        const data = await response.json();
 
-            container.innerHTML = ''; 
-
-            data.matches.forEach(mecz => {
-                const meczElement = document.createElement('div');
-                meczElement.innerHTML = `
-                    <div style="border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 12px; background: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="flex: 1; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
-                            <strong>${mecz.homeTeam.shortName || mecz.homeTeam.name}</strong>
-                            <img src="${mecz.homeTeam.crest}" onerror="this.src='https://via.placeholder.com/25'" style="width: 30px; height: 30px; object-fit: contain;">
-                        </div>
-                        
-                        <div style="padding: 0 20px; text-align: center; min-width: 80px;">
-                            <span style="background: #1e293b; color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 1.1rem;">
-                                ${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}
-                            </span>
-                            <div style="color: #2563eb; font-size: 11px; margin-top: 5px; font-weight: bold;">${mecz.status}</div>
-                        </div>
-
-                        <div style="flex: 1; text-align: left; display: flex; align-items: center; justify-content: flex-start; gap: 10px;">
-                            <img src="${mecz.awayTeam.crest}" onerror="this.src='https://via.placeholder.com/25'" style="width: 30px; height: 30px; object-fit: contain;">
-                            <strong>${mecz.awayTeam.shortName || mecz.awayTeam.name}</strong>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(meczElement);
-            });
-        } catch (error) {
-            container.innerHTML = `
-                <div style="text-align:center; color: red; padding: 20px;">
-                    <p>Błąd pobierania danych.</p>
-                    <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color: blue; text-decoration: underline;">
-                        KLIKNIJ TUTAJ I KLIKNIJ PRZYCISK "Request access", ABY ODBLOKOWAĆ WYNIKI
-                    </a>
-                </div>`;
-            console.error("API Error:", error);
+        if (!data.matches || data.matches.length === 0) {
+            mainContainer.innerHTML = '<p>Brak meczów na dzisiaj.</p>';
+            return;
         }
-    }
 
-    zaladujMecze();
+        mainContainer.innerHTML = '<h3>Najważniejsze dzisiaj</h3><div id="top-matches"></div>';
+        mainContainer.innerHTML += `
+            <details style="margin-top: 20px;">
+                <summary style="cursor: pointer; color: #2563eb; font-weight: bold;">Pokaż pozostałe mecze (${data.matches.length})</summary>
+                <div id="other-matches" style="margin-top: 10px;"></div>
+            </details>
+        `;
+
+        const topDiv = document.getElementById('top-matches');
+        const otherDiv = document.getElementById('other-matches');
+
+        data.matches.forEach(mecz => {
+            const html = `
+                <div style="border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <div style="flex: 1; text-align: right;">
+                        <img src="${mecz.homeTeam.crest}" width="20" style="vertical-align: middle; margin-right: 5px;">
+                        ${mecz.homeTeam.shortName}
+                    </div>
+                    <div style="padding: 0 15px; font-weight: bold;">
+                        ${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}
+                    </div>
+                    <div style="flex: 1; text-align: left;">
+                        ${mecz.awayTeam.shortName}
+                        <img src="${mecz.awayTeam.crest}" width="20" style="vertical-align: middle; margin-left: 5px;">
+                    </div>
+                </div>
+            `;
+
+            // Sprawdzamy czy mecz należy do TOP 5
+            if (topLeagues.includes(mecz.competition.code)) {
+                topDiv.innerHTML += html;
+            } else {
+                otherDiv.innerHTML += html;
+            }
+        });
+
+        // Jeśli nie ma meczów TOP 5, dajemy info
+        if (topDiv.innerHTML === "") {
+            topDiv.innerHTML = "<p style='color: gray;'>Brak dzisiejszych spotkań w Top 5 lig.</p>";
+        }
+
+    } catch (error) {
+        mainContainer.innerHTML = '<p>Błąd. Upewnij się, że proxy jest aktywne.</p>';
+    }
+}
+zaladujMecze();
 </script>
 </body>
 </html>

@@ -3,292 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Connect - Pro Auto Lineup</title>
+    <title>Football Connect - SofaStyle</title>
     <style>
         :root {
-            --sofa-blue: #020d1c;
-            --sofa-accent: #ff0046;
-            --nav-blue: #0047ff; /* Niebieski kolor dla menu i stopki */
-            --text-main: #1f2937;
+            --bg-dark: #121212;
+            --card-dark: #1e1e1e;
+            --sofa-blue: #0047ff;
+            --text-gray: #b0b0b0;
+            --accent: #ff0046;
         }
 
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
-            color: var(--text-main); 
-            background-image: url('boisko.jpg');
+            background-color: var(--bg-dark);
+            color: white;
+            /* Próba załadowania tła, jeśli plik istnieje */
+            background-image: linear-gradient(rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 0.8)), url('boisko.jpg');
+            background-attachment: fixed;
             background-size: cover;
         }
 
-        /* Menu Styl SofaScore */
-        nav { 
-            background: var(--nav-blue); 
-            color: white; 
-            padding: 1rem; 
-            display: flex; 
-            gap: 15px; 
-            align-items: center; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            position: sticky; top: 0; z-index: 1000;
-        }
-        nav strong { font-size: 1.1rem; }
-        nav a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; }
-        nav a:hover { color: white; border-bottom: 2px solid white; }
+        nav { background: var(--sofa-blue); padding: 1rem; display: flex; gap: 20px; font-weight: bold; }
+        nav a { color: white; text-decoration: none; font-size: 0.9rem; opacity: 0.8; }
+        nav a:hover { opacity: 1; }
 
-        /* Stopka Styl SofaScore */
-        footer {
-            background: var(--nav-blue);
-            color: rgba(255,255,255,0.7);
-            padding: 1.5rem;
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+        /* Spotkanie Dnia */
+        .featured-match {
+            background: var(--card-dark);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
             text-align: center;
-            font-size: 0.8rem;
-            margin-top: 2rem;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .featured-title { color: var(--sofa-blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px; }
+        .featured-teams { display: flex; justify-content: space-around; align-items: center; font-size: 1.5rem; font-weight: 800; }
+
+        /* Nagłówki Lig */
+        .league-group { margin-bottom: 20px; }
+        .league-header { 
+            background: #2a2a2a; 
+            padding: 10px 15px; 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #333;
         }
 
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-
-        /* Karta Meczu Styl SofaScore */
-        .match-card { background: rgba(255,255,255,0.95); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
-        .league-header { background: rgba(250,250,250,0.9); padding: 8px 15px; font-size: 12px; color: #6b7280; border-bottom: 1px solid #f1f1f1; }
+        /* Karty meczów w grupach */
+        .match-row { 
+            background: var(--card-dark); 
+            padding: 15px; 
+            display: flex; 
+            align-items: center; 
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .match-row:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+        .match-row:hover { background: #252525; }
         
-        .score-row { display: flex; align-items: center; padding: 20px 15px; cursor: pointer; transition: background 0.2s; }
-        .score-row:hover { background: #f9fafb; }
-        .team-box { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .team-box b { font-size: 14px; margin-top: 5px; }
-        .score-box { flex: 0 0 80px; text-align: center; }
-        .score-val { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
-        .match-status { font-size: 11px; color: var(--sofa-accent); font-weight: bold; text-transform: uppercase; }
+        .m-time { flex: 0 0 50px; font-size: 0.75rem; color: var(--text-gray); }
+        .m-teams { flex: 1; display: flex; flex-direction: column; gap: 5px; font-size: 0.95rem; }
+        .m-score { flex: 0 0 40px; text-align: right; font-weight: bold; font-family: monospace; font-size: 1.1rem; }
+        .live-tag { color: var(--accent); font-size: 0.7rem; font-weight: bold; }
 
-        /* Panel Detali i Zakładki */
-        .details-panel { display: none; border-top: 1px solid #f1f1f1; }
-        .tabs { display: flex; border-bottom: 1px solid #f1f1f1; }
-        .tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; }
-        .tab.active { color: #0077ff; border-bottom: 2px solid #0077ff; }
-
-        /* Boisko Pionowe w Detalach */
-        .pitch-wrapper { padding: 15px; background: #166534; }
-        .pitch { 
-            position: relative; width: 100%; height: 480px; 
-            background: #22c55e; border: 2px solid rgba(255,255,255,0.5); border-radius: 4px;
-            background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 100% 10%;
-        }
-        .center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; }
-
-        /* Zawodnicy */
-        .player-node {
-            position: absolute; width: 32px; height: 32px;
-            border-radius: 50%; transform: translate(-50%, -50%);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold; color: white; border: 2px solid #fff;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.3s;
-        }
-        .p-name { position: absolute; top: 34px; font-size: 10px; color: white; white-space: nowrap; text-shadow: 1px 1px 2px #000; font-weight: normal; }
-        .home-player { background: #0047ff; }
-        .away-player { background: #ff0046; }
-
-        /* Statystyki */
-        .stats-container { padding: 15px; display: none; }
-        .stat-row { margin-bottom: 12px; }
-        .stat-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
-        .stat-bar-bg { height: 8px; background: #e5e7eb; border-radius: 4px; display: flex; overflow: hidden; }
-        .stat-bar-home { height: 100%; background: #0047ff; transition: width 0.5s; }
-        .stat-bar-away { height: 100%; background: #ff0046; transition: width 0.5s; }
+        .details-panel { display: none; background: #1a1a1a; padding: 15px; border-top: 1px solid #333; }
     </style>
 </head>
 <body>
 
 <nav>
-    <strong>⚽ Live Portal</strong>
-    <a href="mecze.html">Pobierz Live</a>
+    <a href="#">Wszystkie</a>
+    <a href="#">Ulubione</a>
+    <a href="#">Kursy</a>
 </nav>
 
-<div class="container">
-    <div id="livescore-list">Pobieranie danych...</div>
+<div class="container" id="main-content">
+    <div id="featured-section"></div>
+    <div id="leagues-container">Ładowanie meczów...</div>
 </div>
 
-<footer>
-    © 2026 Football Connect | Dane SofaScore Style | Wykonano w Płocku
-</footer>
-
 <script>
-// WKLEJ SWÓJ AKTUALNY KLUCZ Z RAPIDAPI
 const API_KEY = '79fd2ae63bmsh4451c802cff7e6dp1e173fjsnaf461877a16f';
 const API_HOST = 'sportapi7.p.rapidapi.com';
 
-async function loadMatches() {
+// Hierarchia lig: Ekstraklasa (ID 344), potem Top 5
+const TOP_LEAGUES = [344, 17, 8, 23, 35, 4]; 
+
+async function fetchData() {
     try {
         const res = await fetch(`https://${API_HOST}/api/v1/sport/football/events/live`, {
             headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
         });
         const data = await res.json();
-        renderMatches(data.events);
-    } catch (e) { 
-        document.getElementById('livescore-list').innerHTML = "Błąd połączenia. Sprawdź subskrypcję w RapidAPI.";
+        processMatches(data.events);
+    } catch (e) {
+        document.getElementById('leagues-container').innerHTML = "Błąd API.";
     }
 }
 
-function renderMatches(events) {
-    const list = document.getElementById('livescore-list');
-    list.innerHTML = '';
-    
-    events.forEach(ev => {
-        const card = document.createElement('div');
-        card.className = 'match-card';
-        card.innerHTML = `
-            <div class="league-header">${ev.tournament.name}</div>
-            <div class="score-row" onclick="toggleDetails(${ev.id})">
-                <div class="team-box"><b>${ev.homeTeam.shortName}</b></div>
-                <div class="score-box">
-                    <div class="score-val">${ev.homeScore.current} - ${ev.awayScore.current}</div>
-                    <div class="match-status">${ev.status.description}</div>
-                </div>
-                <div class="team-box"><b>${ev.awayTeam.shortName}</b></div>
+function processMatches(events) {
+    if(!events || events.length === 0) return;
+
+    // 1. Spotkanie Dnia (pierwsze z brzegu lub z top ligi)
+    renderFeatured(events[0]);
+
+    // 2. Grupowanie według lig
+    const groups = events.reduce((acc, ev) => {
+        const lName = ev.tournament.uniqueTournament.name || ev.tournament.name;
+        const lId = ev.tournament.uniqueTournament.id;
+        if (!acc[lName]) acc[lName] = { id: lId, matches: [] };
+        acc[lName].matches.push(ev);
+        return acc;
+    }, {});
+
+    // 3. Sortowanie grup (Ekstraklasa > Top 5 > Inne)
+    const sortedLeagues = Object.keys(groups).sort((a, b) => {
+        const idA = groups[a].id;
+        const idB = groups[b].id;
+        const posA = TOP_LEAGUES.indexOf(idA) === -1 ? 999 : TOP_LEAGUES.indexOf(idA);
+        const posB = TOP_LEAGUES.indexOf(idB) === -1 ? 999 : TOP_LEAGUES.indexOf(idB);
+        return posA - posB;
+    });
+
+    renderLeagues(groups, sortedLeagues);
+}
+
+function renderFeatured(ev) {
+    const section = document.getElementById('featured-section');
+    section.innerHTML = `
+        <div class="featured-match">
+            <div class="featured-title">Spotkanie dnia</div>
+            <div class="featured-teams">
+                <span>${ev.homeTeam.shortName}</span>
+                <span style="color:var(--sofa-blue)">${ev.homeScore.current} : ${ev.awayScore.current}</span>
+                <span>${ev.awayTeam.shortName}</span>
             </div>
-            <div id="details-${ev.id}" class="details-panel">
-                <div class="tabs">
-                    <div class="tab active" onclick="showTab(${ev.id}, 'pitch')">SKŁADY</div>
-                    <div class="tab" onclick="showTab(${ev.id}, 'stats')">STATYSTYKI</div>
+            <div class="live-tag" style="margin-top:10px">${ev.status.description}</div>
+        </div>
+    `;
+}
+
+function renderLeagues(groups, sortedNames) {
+    const container = document.getElementById('leagues-container');
+    container.innerHTML = '';
+
+    sortedNames.forEach(name => {
+        const league = groups[name];
+        const leagueDiv = document.createElement('div');
+        leagueDiv.className = 'league-group';
+        
+        let matchesHtml = league.matches.map(m => `
+            <div class="match-row">
+                <div class="m-time">${m.status.type === 'inprogress' ? '<span class="live-tag">LIVE</span>' : '19:30'}</div>
+                <div class="m-teams">
+                    <div>${m.homeTeam.name}</div>
+                    <div>${m.awayTeam.name}</div>
                 </div>
-                <div class="pitch-wrapper" id="pitch-wrap-${ev.id}">
-                    <div class="pitch" id="pitch-${ev.id}">
-                        <div class="center-circle"></div>
-                    </div>
+                <div class="m-score">
+                    <div>${m.homeScore.current}</div>
+                    <div>${m.awayScore.current}</div>
                 </div>
-                <div id="stats-${ev.id}" class="stats-container"></div>
             </div>
+        `).join('');
+
+        leagueDiv.innerHTML = `
+            <div class="league-header">${name}</div>
+            ${matchesHtml}
         `;
-        list.appendChild(card);
+        container.appendChild(leagueDiv);
     });
 }
 
-function showTab(id, type) {
-    const details = document.getElementById(`details-${id}`);
-    const tabs = details.querySelectorAll('.tab');
-    tabs.forEach(t => t.classList.remove('active'));
-    
-    const pitchWrap = document.getElementById(`pitch-wrap-${id}`);
-    const statsDiv = document.getElementById(`stats-${id}`);
-
-    if (type === 'pitch') {
-        tabs[0].classList.add('active');
-        pitchWrap.style.display = 'block';
-        statsDiv.style.display = 'none';
-        loadLineups(id);
-    } else {
-        tabs[1].classList.add('active');
-        pitchWrap.style.display = 'none';
-        statsDiv.style.display = 'block';
-        loadStats(id);
-    }
-}
-
-async function toggleDetails(id) {
-    const panel = document.getElementById(`details-${id}`);
-    const isHidden = panel.style.display === 'none' || panel.style.display === '';
-    panel.style.display = isHidden ? 'block' : 'none';
-    if(isHidden) loadLineups(id); // Przy otwarciu detali domyślnie składy
-}
-
-async function loadLineups(id) {
-    const pitch = document.getElementById(`pitch-${id}`);
-    try {
-        const res = await fetch(`https://${API_HOST}/api/v1/event/${id}/lineups`, {
-            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
-        });
-        const data = await res.json();
-        
-        pitch.querySelectorAll('.player-node').forEach(n => n.remove());
-        
-        // Funkcja do rysowania - ROZWIĄZUJE PROBLEM WSZYSTKO W JEDNYM MIEJSCU
-        const drawAutoLineup = (players, type) => {
-            if(!players || players.length === 0) return;
-
-            // 1. Grupowanie zawodników po pozycjach (G, D, M, F)
-            const grouped = players.reduce((acc, p) => {
-                const pos = p.position; // G, D, M, F
-                if(!acc[pos]) acc[pos] = [];
-                acc[pos].push(p);
-                return acc;
-            }, {});
-
-            // 2. Mapowanie wysokości na boisku (SofaScore Pro Style)
-            // Gospodarze na dole, Goście na górze (pionowy SofaStyle)
-            const rowHeights = type === 'home' 
-                ? { 'G': 90, 'D': 70, 'M': 50, 'F': 30 } 
-                : { 'G': 10, 'D': 30, 'M': 50, 'F': 70 };
-
-            // 3. Rysowanie każdego rzędu zawodników
-            Object.keys(grouped).forEach(pos => {
-                const rowPlayers = grouped[pos];
-                const height = rowHeights[pos];
-                const count = rowPlayers.length;
-
-                rowPlayers.forEach((p, index) => {
-                    const node = document.createElement('div');
-                    node.className = `player-node ${type === 'home' ? 'home-player' : 'away-player'}`;
-                    
-                    // Obliczanie poziomej pozycji (index + 1) / (count + 1) * 100
-                    const left = ((index + 1) / (count + 1)) * 100;
-                    
-                    node.style.left = `${left}%`;
-                    node.style.top = `${height}%`;
-                    node.innerHTML = `${p.shirtNumber} <div class="p-name">${p.player.shortName}</div>`;
-                    pitch.appendChild(node);
-                });
-            });
-        };
-
-        drawAutoLineup(data.home?.players, 'home');
-        drawAutoLineup(data.away?.players, 'away');
-
-    } catch (e) { pitch.innerHTML = "<p style='color:white; text-align:center'>Składy jeszcze niedostępne</p>"; }
-}
-
-async function loadStats(id) {
-    const statsDiv = document.getElementById(`stats-${id}`);
-    statsDiv.innerHTML = 'Ładowanie statystyk...';
-    
-    try {
-        const res = await fetch(`https://${API_HOST}/api/v1/event/${id}/statistics`, {
-            headers: { 'x-rapidapi-key': API_KEY, 'x-rapidapi-host': API_HOST }
-        });
-        const data = await res.json();
-        
-        if(!data.statistics || data.statistics.length === 0) {
-            statsDiv.innerHTML = "Brak szczegółowych statystyk.";
-            return;
-        }
-
-        // Bierzemy główną grupę statystyk
-        const s = data.statistics[0].groups; 
-
-        statsDiv.innerHTML = '';
-        s.forEach(group => {
-            group.statisticsItems.forEach(item => {
-                const homeVal = parseInt(item.home);
-                const awayVal = parseInt(item.away);
-                const total = homeVal + awayVal;
-                // Obsługa sytuacji, gdy total=0 (np. na początku meczu)
-                const homePct = total > 0 ? (homeVal / total) * 100 : 50; 
-
-                const row = document.createElement('div');
-                row.className = 'stat-row';
-                row.innerHTML = `
-                    <div class="stat-labels"><span>${item.home}</span><span>${item.name}</span><span>${item.away}</span></div>
-                    <div class="stat-bar-bg">
-                        <div class="stat-bar-home" style="width:${homePct}%"></div>
-                        <div class="stat-bar-away" style="width:${100 - homePct}%"></div>
-                    </div>
-                `;
-                statsDiv.appendChild(row);
-            });
-        });
-    } catch (e) { statsDiv.innerHTML = "Błąd pobierania statystyk."; }
-}
-
-loadMatches();
+fetchData();
 </script>
 </body>
 </html>

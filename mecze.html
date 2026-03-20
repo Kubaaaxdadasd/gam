@@ -10,8 +10,8 @@
         nav a { color: white; text-decoration: none; font-size: 0.9rem; }
         .news-container { max-width: 800px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1e293b; }
-        .mecz-card { transition: transform 0.2s; }
-        .mecz-card:hover { transform: scale(1.01); }
+        .mecz-card { transition: transform 0.2s; border-radius: 8px; }
+        .mecz-card:hover { transform: scale(1.01); background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -35,9 +35,8 @@
 async function zaladujMecze() {
     const MY_TOKEN = 'f74f5a062c754c81866359ee05090ff3';
     const mainContainer = document.getElementById('football-news');
-    const url = 'https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/matches';
-
-    const topLeagues = ['PL', 'PD', 'BL1', 'SA', 'FL1', 'CL']; 
+    const proxy = 'https://cors-anywhere.herokuapp.com/';
+    const url = proxy + 'https://api.football-data.org/v4/matches';
 
     try {
         const response = await fetch(url, { headers: { 'X-Auth-Token': MY_TOKEN } });
@@ -58,65 +57,109 @@ async function zaladujMecze() {
         });
 
         for (const liga in grupyLigi) {
-            const isTop = topLeagues.includes(grupyLigi[liga][0].competition.code);
-            
-            // Nagłówek ligi
             const section = document.createElement('div');
-            section.innerHTML = `
-                <div style="background: #e2e8f0; padding: 5px 15px; margin: 15px 0 10px 0; border-radius: 5px; font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 10px;">
-                    <img src="${grupyLigi[liga][0].competition.emblem}" width="20" onerror="this.style.display='none'">
-                    ${liga}
-                </div>
-            `;
-
+            section.innerHTML = `<div style="background: #e2e8f0; padding: 8px 15px; margin: 15px 0 10px 0; border-radius: 5px; font-weight: bold; color: #1e293b;">${liga}</div>`;
             const matchesList = document.createElement('div');
 
-            // TUTAJ JEST POPRAWIONA PĘTLA Z KLIKANIEM
             grupyLigi[liga].forEach(mecz => {
+                const meczWrapper = document.createElement('div');
+                meczWrapper.style.marginBottom = "10px";
+
                 const meczDiv = document.createElement('div');
-                meczDiv.style.cursor = "pointer";
                 meczDiv.className = "mecz-card";
-                
-                // Przekierowanie do detali
-                meczDiv.onclick = () => {
-                    window.location.href = `detale-meczu.html?id=${mecz.id}`;
-                };
+                meczDiv.style.cursor = "pointer";
+                meczDiv.style.background = "#fff";
+                meczDiv.style.padding = "15px";
+                meczDiv.style.display = "flex";
+                meczDiv.style.justifyContent = "space-between";
+                meczDiv.style.alignItems = "center";
+                meczDiv.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
+                meczDiv.style.border = "1px solid #eee";
 
                 meczDiv.innerHTML = `
-                    <div style="border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                        <div style="flex: 1; text-align: right; font-size: 0.9rem;">
-                            <strong>${mecz.homeTeam.shortName || mecz.homeTeam.name}</strong>
-                            <img src="${mecz.homeTeam.crest}" width="25" style="vertical-align: middle; margin-left: 8px;">
-                        </div>
-                        <div style="padding: 0 15px; text-align: center; min-width: 70px;">
-                            <span style="background: #1e293b; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">
-                                ${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}
-                            </span>
-                        </div>
-                        <div style="flex: 1; text-align: left; font-size: 0.9rem;">
-                            <img src="${mecz.awayTeam.crest}" width="25" style="vertical-align: middle; margin-right: 8px;">
-                            <strong>${mecz.awayTeam.shortName || mecz.awayTeam.name}</strong>
-                        </div>
-                    </div>
+                    <div style="flex: 1; text-align: right;"><strong>${mecz.homeTeam.shortName || mecz.homeTeam.name}</strong> <img src="${mecz.homeTeam.crest}" width="20" style="vertical-align:middle; margin-left:5px;"></div>
+                    <div style="padding: 0 15px;"><span style="background: #1e293b; color: white; padding: 4px 8px; border-radius: 4px; font-weight:bold;">${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}</span></div>
+                    <div style="flex: 1; text-align: left;"><img src="${mecz.awayTeam.crest}" width="20" style="vertical-align:middle; margin-right:5px;"> <strong>${mecz.awayTeam.shortName || mecz.awayTeam.name}</strong></div>
                 `;
-                matchesList.appendChild(meczDiv);
+
+                const detaleDiv = document.createElement('div');
+                detaleDiv.style.display = "none";
+                detaleDiv.style.background = "#fcfcfc";
+                detaleDiv.style.padding = "15px";
+                detaleDiv.style.border = "1px solid #e2e8f0";
+                detaleDiv.style.borderTop = "none";
+                detaleDiv.style.borderRadius = "0 0 8px 8px";
+
+                meczDiv.onclick = async () => {
+                    if (detaleDiv.style.display === "none") {
+                        detaleDiv.style.display = "block";
+                        meczDiv.style.borderRadius = "8px 8px 0 0";
+                        
+                        if (detaleDiv.innerHTML === "") {
+                            detaleDiv.innerHTML = "<small>Pobieranie składów i detali...</small>";
+                            try {
+                                const res = await fetch(`${proxy}https://api.football-data.org/v4/matches/${mecz.id}`, {
+                                    headers: { 'X-Auth-Token': MY_TOKEN }
+                                });
+                                const detale = await res.json();
+
+                                // GOLE
+                                let goalsHtml = "";
+                                if (detale.goals && detale.goals.length > 0) {
+                                    goalsHtml = `<div style="margin-bottom:10px; color: #059669;">⚽ <b>Gole:</b> ${detale.goals.map(g => `${g.scorer.name} (${g.minute}')`).join(', ')}</div>`;
+                                }
+
+                                // SKŁADY
+                                let lineupsHtml = "";
+                                if (detale.homeTeam.lineup && detale.homeTeam.lineup.length > 0) {
+                                    lineupsHtml = `
+                                        <div style="display: flex; gap: 15px; margin-top: 10px;">
+                                            <div style="flex: 1; background: #fff; padding: 8px; border-radius: 5px; border: 1px solid #f1f5f9;">
+                                                <b style="font-size: 0.75rem; display:block; border-bottom:1px solid #eee; margin-bottom:5px;">${detale.homeTeam.shortName}</b>
+                                                <ul style="padding: 0; list-style: none; font-size: 0.8rem; margin:0;">
+                                                    ${detale.homeTeam.lineup.map(p => `<li><small style="color:#64748b">${p.shirtNumber}.</small> ${p.name}</li>`).join('')}
+                                                </ul>
+                                            </div>
+                                            <div style="flex: 1; background: #fff; padding: 8px; border-radius: 5px; border: 1px solid #f1f5f9;">
+                                                <b style="font-size: 0.75rem; display:block; border-bottom:1px solid #eee; margin-bottom:5px;">${detale.awayTeam.shortName}</b>
+                                                <ul style="padding: 0; list-style: none; font-size: 0.8rem; margin:0;">
+                                                    ${detale.awayTeam.lineup.map(p => `<li><small style="color:#64748b">${p.shirtNumber}.</small> ${p.name}</li>`).join('')}
+                                                </ul>
+                                            </div>
+                                        </div>`;
+                                } else {
+                                    lineupsHtml = `<p style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">Składy nie są jeszcze dostępne.</p>`;
+                                }
+
+                                detaleDiv.innerHTML = `
+                                    <div style="font-size: 0.85rem; color: #475569;">
+                                        ${goalsHtml}
+                                        <div style="font-weight: bold; margin-bottom: 5px; color: #1e293b;">📋 Składy wyjściowe:</div>
+                                        ${lineupsHtml}
+                                        <div style="border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 5px; font-size: 0.75rem; color: #94a3b8;">
+                                            🏟️ ${detale.venue || 'Brak danych'} | ⚖️ ${detale.referees[0]?.name || 'Sędzia nieznany'}
+                                        </div>
+                                    </div>`;
+                            } catch (e) {
+                                detaleDiv.innerHTML = "Błąd pobierania danych.";
+                            }
+                        }
+                    } else {
+                        detaleDiv.style.display = "none";
+                        meczDiv.style.borderRadius = "8px";
+                    }
+                };
+
+                meczWrapper.appendChild(meczDiv);
+                meczWrapper.appendChild(detaleDiv);
+                matchesList.appendChild(meczWrapper);
             });
 
-            if (isTop) {
-                mainContainer.appendChild(section);
-                mainContainer.appendChild(matchesList);
-            } else {
-                const details = document.createElement('details');
-                details.style.marginTop = "10px";
-                details.innerHTML = `<summary style="cursor: pointer; color: #64748b; font-size: 0.8rem; margin-bottom: 5px;">Pokaż mecze: ${liga}</summary>`;
-                details.appendChild(matchesList);
-                mainContainer.appendChild(details);
-            }
+            mainContainer.appendChild(section);
+            mainContainer.appendChild(matchesList);
         }
-
     } catch (error) {
-        mainContainer.innerHTML = '<p>Błąd pobierania danych. Sprawdź połączenie lub aktywuj proxy.</p>';
-        console.error(error);
+        mainContainer.innerHTML = '<p>Błąd połączenia. Sprawdź proxy.</p>';
     }
 }
 zaladujMecze();

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Szczegóły Meczu</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: white; margin: 0; }
+        .container { max-width: 900px; margin: 20px auto; padding: 20px; }
+        .match-header { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .score { font-size: 4rem; font-weight: bold; margin: 20px 0; background: #22c55e; display: inline-block; padding: 10px 30px; border-radius: 15px; }
+        .teams-grid { display: flex; justify-content: space-around; align-items: center; }
+        .team img { width: 120px; height: 120px; object-fit: contain; }
+        .goals-list { margin-top: 20px; color: #94a3b8; font-style: italic; }
+        .stats-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .stat-card { background: #1e293b; padding: 20px; border-radius: 15px; border-left: 5px solid #22c55e; }
+        .back-link { color: #22c55e; text-decoration: none; font-weight: bold; display: block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="mecze.html" class="back-link">← Wróć do listy meczów</a>
+    
+    <div id="match-data">
+        <p style="text-align: center;">Ładowanie szczegółowych danych...</p>
+    </div>
+</div>
+
+<script>
+    async function pobierzWszystko() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const matchId = urlParams.get('id');
+        const token = 'f74f5a062c754c81866359ee05090ff3';
+        const proxy = 'https://cors-anywhere.herokuapp.com/';
+        
+        if (!matchId) return;
+
+        try {
+            // Pobieramy dane meczu
+            const res = await fetch(`${proxy}https://api.football-data.org/v4/matches/${matchId}`, {
+                headers: { 'X-Auth-Token': token }
+            });
+            const mecz = await res.json();
+
+            // Pobieramy listę strzelców (jeśli są w danych)
+            let strzelcyHtml = "";
+            if (mecz.goals && mecz.goals.length > 0) {
+                strzelcyHtml = mecz.goals.map(g => `⚽ ${g.scorer.name} (${g.minute}')`).join('<br>');
+            }
+
+            const container = document.getElementById('match-data');
+            container.innerHTML = `
+                <div class="match-header">
+                    <p style="text-transform: uppercase; letter-spacing: 2px; color: #22c55e;">${mecz.competition.name}</p>
+                    <div class="teams-grid">
+                        <div class="team">
+                            <img src="${mecz.homeTeam.crest}">
+                            <h3>${mecz.homeTeam.name}</h3>
+                        </div>
+                        <div class="score">${mecz.score.fullTime.home ?? 0} : ${mecz.score.fullTime.away ?? 0}</div>
+                        <div class="team">
+                            <img src="${mecz.awayTeam.crest}">
+                            <h3>${mecz.awayTeam.name}</h3>
+                        </div>
+                    </div>
+                    <div class="goals-list">${strzelcyHtml || "Brak zarejestrowanych bramek"}</div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <h4>🏟️ Stadion</h4>
+                        <p>${mecz.venue || 'Nie podano'}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🏁 Status</h4>
+                        <p>${mecz.status === 'FINISHED' ? 'Zakończony' : 'W trakcie / Nadchodzący'}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>⚖️ Sędzia</h4>
+                        <p>${mecz.referees[0]?.name || 'Brak danych'}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>📅 Data</h4>
+                        <p>${new Date(mecz.utcDate).toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            document.getElementById('match-data').innerHTML = "Błąd ładowania szczegółów. Sprawdź dostęp do proxy.";
+        }
+    }
+
+    pobierzWszystko();
+</script>
+</body>
+</html>
